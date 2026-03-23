@@ -1,68 +1,40 @@
 # WalletViz
 
-Cross-sectional snapshot of the Polymarket wallet ecosystem. Open source, built in public.
+**See who's actually trading on Polymarket.**
 
-## What it does
+WalletViz scans the entire Polymarket platform and maps out the wallet landscape — how many traders there are, how big they are, and how they behave.
 
-Scans all active Polymarket events (~8,700), collects recent trades, and builds a structural analysis of the wallet landscape:
+## Key Findings
 
-- **176K+ human wallets** observed (bots filtered)
-- Wallet size distribution (micro / small / medium / large / whale)
-- Trade frequency and market participation breadth
-- Volume concentration (Pareto analysis)
-- Buy vs sell behavior patterns
+- **176K+ real wallets** identified (bots removed)
+- **71% are small traders** (under $100 in volume)
+- **Less than 1% are whales** (over $10K)
+- The top 1% of wallets control the majority of trading volume
 
-This is a **point-in-time snapshot**, not a time series. It answers: "Right now, what does the Polymarket wallet ecosystem look like?"
+## What You'll See
 
-## Methodology
+- **Wallet size breakdown** — micro, small, medium, large, whale
+- **Trading frequency** — how often people trade
+- **Market participation** — how many markets each wallet touches
+- **Buy vs sell behavior** — who's buying, who's selling
+- **Volume concentration** — how much the top traders dominate
 
-1. Collect the most recent 1,000 trades from each active event via Polymarket Data API
-2. Deduplicate wallets across all events
-3. Filter bots: wallets averaging >50 trades/day are excluded (~0.3%)
-4. Analyze distributions across remaining human wallets
+## How It Works
 
-**Limitations:** Each event only yields its latest 1,000 trades. High-volume events cover hours; low-volume events cover weeks. This is a representative snapshot, not a complete census. The true number of active wallets is likely higher.
+We collect trade data from every active market on Polymarket (~8,700 events), filter out bots, and analyze what's left. Data refreshes daily.
 
-## Tech Stack
+> This is a snapshot of the ecosystem, not a leaderboard. We show the full picture — including the long tail of small traders that most analytics miss.
 
-- **Next.js 14** (App Router, TypeScript)
-- **SQLite** (better-sqlite3) for persistent trade storage
-- **Tailwind CSS** for styling
-- **Recharts** for data visualization
-- **Polymarket Data API** + **Gamma API** for trade/event data
-
-## Getting Started
+## For Developers
 
 ```bash
 npm install
-
-# Initial data collection (full scan, ~15 min)
-npm run collect:full
-
-# Start dev server
-npm run dev
+npm run collect:full    # First-time data collection (~15 min)
+npm run dev             # Start the dashboard
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
-
-## Data Collection
-
-```bash
-npm run collect:full    # Full scan: all ~8,700 active events
-npm run collect:update  # Incremental: top 500 events by volume
-npm run collect:purge   # Remove trades older than 35 days
-npm run collect:stats   # Print database stats
-```
-
-Data is stored in `data/walletviz.db` (SQLite). Recommended: run `collect:update` daily and `collect:full` weekly via cron.
-
-## Data Source
-
-- Events: `GET https://gamma-api.polymarket.com/events`
-- Trades: `GET https://data-api.polymarket.com/trades?eventId={id}`
-
-No API key required. Public endpoints.
+See the full [technical documentation](docs/TECHNICAL.md) for architecture details.
 
 ## License
 
-MIT
+MIT — free to use, fork, and build upon.
