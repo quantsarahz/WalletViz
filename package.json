@@ -6,15 +6,21 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "collect:full": "tsx scripts/collect.ts full",
+    "collect:update": "tsx scripts/collect.ts update",
+    "collect:purge": "tsx scripts/collect.ts purge",
+    "collect:stats": "tsx scripts/collect.ts stats"
   },
   "dependencies": {
+    "better-sqlite3": "^12.8.0",
     "next": "^14.2.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "recharts": "^2.12.0"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20.0.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
@@ -23,6 +29,7 @@
     "eslint-config-next": "^14.2.0",
     "postcss": "^8.4.0",
     "tailwindcss": "^3.4.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.0.0"
   }
 }
