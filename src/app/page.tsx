@@ -5,14 +5,6 @@ import StatsCard from "@/components/StatsCard";
 import TierPieChart from "@/components/TierPieChart";
 import DistributionChart from "@/components/DistributionChart";
 import ConcentrationChart from "@/components/ConcentrationChart";
-import TimeSeriesChart from "@/components/TimeSeriesChart";
-
-interface DailyPoint {
-  date: string;
-  activeWallets: number;
-  trades: number;
-  volume: number;
-}
 
 interface SizeBucket {
   label: string;
@@ -28,21 +20,19 @@ interface ConcentrationPoint {
   color: string;
 }
 
-interface LandscapeData {
+interface SnapshotData {
   overview: {
-    active30d: number;
-    active7d: number;
-    totalObserved: number;
+    scannedAt: string;
+    totalObservedWallets: number;
+    botWallets: number;
+    humanWallets: number;
     totalTrades: number;
-    observationStart: number;
-    observationEnd: number;
-    medianVolume30d: number;
-    medianTrades30d: number;
-    avgVolume30d: number;
-    daysWithData: number;
-    lastSync: string | null;
+    humanTrades: number;
+    medianVolume: number;
+    avgVolume: number;
+    medianTrades: number;
+    eventsScanned: number;
   };
-  dailyActivity: DailyPoint[];
   sizeDistribution: SizeBucket[];
   concentration: ConcentrationPoint[];
   frequencyDistribution: SizeBucket[];
@@ -53,11 +43,6 @@ interface LandscapeData {
     balanced: number;
     total: number;
   };
-  meta: {
-    dataSource: string;
-    lastSync: string | null;
-    fetchedAt: string;
-  };
 }
 
 function fmt(n: number): string {
@@ -66,18 +51,10 @@ function fmt(n: number): string {
   return `$${n.toFixed(0)}`;
 }
 
-function fmtDate(ts: number): string {
-  return new Date(ts * 1000).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
-}
-
 export default function Home() {
-  const [data, setData] = useState<LandscapeData | null>(null);
+  const [data, setData] = useState<SnapshotData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [cacheStatus, setCacheStatus] = useState("");
 
   const fetchData = async (refresh = false) => {
     setLoading(true);
@@ -86,10 +63,9 @@ export default function Home() {
       const url = refresh ? "/api/landscape?refresh=1" : "/api/landscape";
       const res = await fetch(url);
       if (!res.ok) throw new Error("API request failed");
-      setCacheStatus(res.headers.get("X-Cache") || "");
       setData(await res.json());
     } catch {
-      setError("Failed to load data. Please retry.");
+      setError("Failed to load data.");
     } finally {
       setLoading(false);
     }
@@ -109,10 +85,10 @@ export default function Home() {
           Wallet<span className="text-indigo-400">Viz</span>
         </h1>
         <p className="mt-2 text-lg text-gray-400">
-          Polymarket Active Wallet Analytics
+          Polymarket Wallet Landscape
         </p>
         <p className="mt-1 text-sm text-gray-500">
-          30-day active wallet analysis based on observed trading activity
+          Cross-sectional snapshot of the Polymarket wallet ecosystem
         </p>
 
         <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -121,145 +97,111 @@ export default function Home() {
             disabled={loading}
             className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium hover:bg-indigo-500 disabled:opacity-50 transition-colors"
           >
-            {loading ? "Loading..." : "Refresh Data"}
+            {loading ? "Loading..." : "Refresh"}
           </button>
-          {data && (
+          {o && (
             <span className="text-xs text-gray-500">
-              {cacheStatus === "HIT" ? "Cached" : "Fresh"} |{" "}
-              {new Date(data.meta.fetchedAt).toLocaleString()}
+              Scanned: {new Date(o.scannedAt).toLocaleString()}
             </span>
           )}
         </div>
         {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
-
-        {/* Methodology */}
-        {data && o && (
-          <div className="mt-4 rounded-lg border border-gray-700/50 bg-gray-800/30 px-4 py-3 text-xs text-gray-400 leading-relaxed">
-            <strong className="text-gray-300">Methodology:</strong> Full scan
-            of all active Polymarket events (~8,700), collecting the most recent
-            1,000 trades per event. Data stored in SQLite and updated daily.{" "}
-            {o.totalObserved.toLocaleString()} unique wallets observed across{" "}
-            {o.daysWithData} days ({fmtDate(o.observationStart)}–
-            {fmtDate(o.observationEnd)}). All distribution metrics are scoped to
-            the 30-day window. Last sync:{" "}
-            {o.lastSync
-              ? new Date(o.lastSync).toLocaleString()
-              : "pending"}
-            .
-          </div>
-        )}
       </header>
 
       {/* Loading */}
       {loading && !data && (
         <div className="text-center py-24">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent" />
-          <p className="mt-4 text-gray-400">
-            Loading wallet data from database...
-          </p>
+          <p className="mt-4 text-gray-400">Loading snapshot data...</p>
         </div>
       )}
 
       {data && o && (
         <>
-          {/* ===== 1. Active Wallet Overview ===== */}
+          {/* ===== Methodology ===== */}
+          <section className="mb-10 rounded-lg border border-gray-700/50 bg-gray-800/30 px-5 py-4 text-sm text-gray-400 leading-relaxed space-y-2">
+            <p>
+              <strong className="text-gray-300">What this is:</strong> A
+              cross-sectional scan of the Polymarket wallet ecosystem. We
+              collected the most recent 1,000 trades from each of{" "}
+              <strong className="text-gray-300">
+                {o.eventsScanned.toLocaleString()}
+              </strong>{" "}
+              active events, yielding{" "}
+              <strong className="text-gray-300">
+                {o.totalTrades.toLocaleString()}
+              </strong>{" "}
+              trades and{" "}
+              <strong className="text-gray-300">
+                {o.totalObservedWallets.toLocaleString()}
+              </strong>{" "}
+              unique wallets.
+            </p>
+            <p>
+              <strong className="text-gray-300">Bot filtering:</strong>{" "}
+              {o.botWallets.toLocaleString()} wallets identified as bots
+              (averaging &gt;50 trades/day) and excluded from all analysis
+              below. Remaining:{" "}
+              <strong className="text-gray-300">
+                {o.humanWallets.toLocaleString()}
+              </strong>{" "}
+              human wallets.
+            </p>
+            <p>
+              <strong className="text-gray-300">What this is not:</strong> This
+              is not a complete census of all Polymarket users. It is a
+              representative snapshot of wallets with recent trading activity
+              across active markets. The true number of active wallets is likely
+              higher.
+            </p>
+          </section>
+
+          {/* ===== Overview ===== */}
           <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-6">
-              Active Wallet Overview
-            </h2>
+            <h2 className="text-2xl font-semibold mb-6">Snapshot Overview</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
               <StatsCard
-                label="30D Active Wallets"
-                value={o.active30d.toLocaleString()}
-                description="Observed in last 30 days"
+                label="Human Wallets"
+                value={o.humanWallets.toLocaleString()}
+                description="After bot filtering"
                 color="#6366f1"
               />
               <StatsCard
-                label="7D Active Wallets"
-                value={o.active7d.toLocaleString()}
-                description="Observed in last 7 days"
-                color="#818cf8"
+                label="Bot Wallets"
+                value={o.botWallets.toLocaleString()}
+                description={`${((o.botWallets / o.totalObservedWallets) * 100).toFixed(1)}% of observed`}
+                color="#ef4444"
               />
               <StatsCard
-                label="Median Volume (30D)"
-                value={fmt(o.medianVolume30d)}
-                description="Per wallet"
+                label="Median Volume"
+                value={fmt(o.medianVolume)}
+                description="Per human wallet"
                 color="#f59e0b"
               />
               <StatsCard
-                label="Avg Volume (30D)"
-                value={fmt(o.avgVolume30d)}
-                description="Per wallet"
+                label="Avg Volume"
+                value={fmt(o.avgVolume)}
+                description="Per human wallet"
                 color="#f59e0b"
               />
               <StatsCard
-                label="Median Trades (30D)"
-                value={o.medianTrades30d.toString()}
-                description="Per wallet"
+                label="Median Trades"
+                value={o.medianTrades.toString()}
+                description="Per human wallet"
                 color="#94a3b8"
               />
             </div>
           </section>
 
-          {/* ===== 2. Activity Trend ===== */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-2">Activity Trend</h2>
-            <p className="text-xs text-gray-500 mb-6">
-              Daily active wallets across all observed markets (30-day window)
-            </p>
-
-            <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6 mb-6">
-              <h3 className="text-sm text-gray-400 mb-4">
-                Daily Active Wallets
-              </h3>
-              <TimeSeriesChart
-                data={data.dailyActivity}
-                series={[
-                  {
-                    key: "activeWallets",
-                    label: "Active Wallets",
-                    color: "#6366f1",
-                  },
-                ]}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6">
-                <h3 className="text-sm text-gray-400 mb-4">Daily Trades</h3>
-                <TimeSeriesChart
-                  data={data.dailyActivity}
-                  series={[
-                    { key: "trades", label: "Trades", color: "#f59e0b" },
-                  ]}
-                  height={250}
-                />
-              </div>
-              <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6">
-                <h3 className="text-sm text-gray-400 mb-4">Daily Volume</h3>
-                <TimeSeriesChart
-                  data={data.dailyActivity.map((d) => ({
-                    ...d,
-                    volume: Math.round(d.volume),
-                  }))}
-                  series={[
-                    { key: "volume", label: "Volume ($)", color: "#8b5cf6" },
-                  ]}
-                  height={250}
-                />
-              </div>
-            </div>
-          </section>
-
-          {/* ===== 3. Distribution (30D Active Wallets) ===== */}
+          {/* ===== Distribution ===== */}
           <section className="mb-12">
             <h2 className="text-2xl font-semibold mb-2">Distribution</h2>
             <p className="text-xs text-gray-500 mb-6">
-              Based on {o.active30d.toLocaleString()} wallets active in the
-              30-day window
+              Based on {o.humanWallets.toLocaleString()} human wallets (bots
+              excluded)
             </p>
 
-            {/* Pie Charts Row 1 */}
+            {/* Row 1: Size + Frequency */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6">
                 <h3 className="text-sm text-gray-400 mb-4">
@@ -289,7 +231,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Pie Charts Row 2 */}
+            {/* Row 2: Market Breadth + Buy/Sell */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6">
                 <h3 className="text-sm text-gray-400 mb-4">
@@ -342,7 +284,7 @@ export default function Home() {
               </h3>
               <p className="text-xs text-gray-600 mb-4">
                 What share of total observed volume is held by the top N% of
-                wallets?
+                human wallets?
               </p>
               <ConcentrationChart data={data.concentration} />
             </div>
@@ -383,8 +325,8 @@ export default function Home() {
       <footer className="mt-12 pb-8 text-center text-xs text-gray-600 space-y-1">
         <p>WalletViz — Open source, built in public.</p>
         <p>
-          Data from Polymarket API. Representative sample, not a complete
-          census. Updated hourly.
+          Snapshot of the Polymarket wallet ecosystem. Not a complete census.
+          Refreshed daily.
         </p>
       </footer>
     </main>

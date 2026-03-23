@@ -1,28 +1,64 @@
 import { getDb } from "./db";
 
-// --- Overview Stats ---
+/**
+ * Bot threshold: wallets averaging > 50 trades/day are classified as bots.
+ * This affects ~0.3% of wallets (P99.5+) and removes automated market makers,
+ * arbitrage bots, and other non-human actors.
+ */
+const BOT_DAILY_TRADE_THRESHOLD = 50;
 
-export interface OverviewStats {
-  active30d: number;
-  active7d: number;
-  totalObserved: number;
-  totalTrades: number;
-  medianVolume30d: number;
-  medianTrades30d: number;
-  avgVolume30d: number;
-  observationStart: number;
-  observationEnd: number;
-  daysWithData: number;
-  lastSync: string | null;
+// --- Bot wallet list (cached per process) ---
+
+let _botWallets: Set<string> | null = null;
+
+function getBotWallets(): Set<string> {
+  if (_botWallets) return _botWallets;
+  const db = getDb();
+  const rows = db
+    .prepare(
+      `SELECT proxy_wallet, COUNT(*) as trades,
+              MAX(timestamp) - MIN(timestamp) as span_sec
+       FROM trades
+       GROUP BY proxy_wallet
+       HAVING (CAST(trades AS REAL) / MAX(CAST(span_sec AS REAL) / 86400.0, 1.0)) > ?`
+    )
+    .all(BOT_DAILY_TRADE_THRESHOLD) as { proxy_wallet: string }[];
+  _botWallets = new Set(rows.map((r) => r.proxy_wallet));
+  return _botWallets;
 }
 
-export function queryOverview(): OverviewStats {
-  const db = getDb();
-  const now = Math.floor(Date.now() / 1000);
-  const day7 = now - 7 * 86400;
-  const day30 = now - 30 * 86400;
+/** SQL fragment to exclude bot wallets. */
+function botFilter(): string {
+  const bots = getBotWallets();
+  if (bots.size === 0) return "";
+  // Use a subquery approach for clean SQL
+  return `AND proxy_wallet NOT IN (
+    SELECT proxy_wallet FROM trades
+    GROUP BY proxy_wallet
+    HAVING (CAST(COUNT(*) AS REAL) / MAX(CAST(MAX(timestamp) - MIN(timestamp) AS REAL) / 86400.0, 1.0)) > ${BOT_DAILY_TRADE_THRESHOLD}
+  )`;
+}
 
-  const totalObserved = (
+// --- Snapshot Overview ---
+
+export interface SnapshotOverview {
+  scannedAt: string;
+  totalObservedWallets: number;
+  botWallets: number;
+  humanWallets: number;
+  totalTrades: number;
+  humanTrades: number;
+  medianVolume: number;
+  avgVolume: number;
+  medianTrades: number;
+  eventsScanned: number;
+}
+
+export function querySnapshotOverview(): SnapshotOverview {
+  const db = getDb();
+  const bots = getBotWallets();
+
+  const totalWallets = (
     db.prepare("SELECT COUNT(DISTINCT proxy_wallet) as c FROM trades").get() as any
   ).c;
 
@@ -30,103 +66,71 @@ export function queryOverview(): OverviewStats {
     db.prepare("SELECT COUNT(*) as c FROM trades").get() as any
   ).c;
 
-  const active30d = (
-    db.prepare(
-      "SELECT COUNT(DISTINCT proxy_wallet) as c FROM trades WHERE timestamp >= ?"
-    ).get(day30) as any
+  const eventsScanned = (
+    db.prepare("SELECT COUNT(DISTINCT event_id) as c FROM trades").get() as any
   ).c;
 
-  const active7d = (
-    db.prepare(
-      "SELECT COUNT(DISTINCT proxy_wallet) as c FROM trades WHERE timestamp >= ?"
-    ).get(day7) as any
-  ).c;
-
-  // Per-wallet stats for 30D active
-  const walletStats30d = db
+  // Human-only stats
+  const humanWalletStats = db
     .prepare(
-      `SELECT proxy_wallet,
-              SUM(size * price) as vol,
-              COUNT(*) as trades
+      `SELECT SUM(vol) as vol, SUM(cnt) as cnt FROM (
+         SELECT proxy_wallet, SUM(size * price) as vol, COUNT(*) as cnt
+         FROM trades
+         WHERE 1=1 ${botFilter()}
+         GROUP BY proxy_wallet
+       )`
+    )
+    .get() as any;
+
+  const humanWallets = totalWallets - bots.size;
+
+  // Median volume and trades for human wallets
+  const humanPerWallet = db
+    .prepare(
+      `SELECT SUM(size * price) as vol, COUNT(*) as cnt
        FROM trades
-       WHERE timestamp >= ?
+       WHERE 1=1 ${botFilter()}
        GROUP BY proxy_wallet
        ORDER BY vol`
     )
-    .all(day30) as { proxy_wallet: string; vol: number; trades: number }[];
+    .all() as { vol: number; cnt: number }[];
 
   let medianVol = 0;
   let medianTrades = 0;
   let avgVol = 0;
 
-  if (walletStats30d.length > 0) {
-    const mid = Math.floor(walletStats30d.length / 2);
-    medianVol = walletStats30d[mid].vol;
-
-    const sortedByTrades = [...walletStats30d].sort((a, b) => a.trades - b.trades);
-    medianTrades = sortedByTrades[mid].trades;
-
-    avgVol =
-      walletStats30d.reduce((s, w) => s + w.vol, 0) / walletStats30d.length;
+  if (humanPerWallet.length > 0) {
+    const mid = Math.floor(humanPerWallet.length / 2);
+    medianVol = humanPerWallet[mid].vol;
+    const sortedByTrades = [...humanPerWallet].sort((a, b) => a.cnt - b.cnt);
+    medianTrades = sortedByTrades[mid].cnt;
+    avgVol = humanPerWallet.reduce((s, w) => s + w.vol, 0) / humanPerWallet.length;
   }
-
-  const timeRange = db
-    .prepare("SELECT MIN(timestamp) as mn, MAX(timestamp) as mx FROM trades")
-    .get() as any;
-
-  const daysWithData = (
-    db.prepare(
-      "SELECT COUNT(DISTINCT date(timestamp, 'unixepoch')) as c FROM trades WHERE timestamp >= ?"
-    ).get(day30) as any
-  ).c;
 
   const lastSync = db
     .prepare("SELECT finished_at FROM sync_log ORDER BY id DESC LIMIT 1")
     .get() as any;
 
+  // Count human-only trades
+  const humanTradesCount = (
+    db.prepare(`SELECT COUNT(*) as c FROM trades WHERE 1=1 ${botFilter()}`).get() as any
+  ).c;
+
   return {
-    active30d,
-    active7d,
-    totalObserved,
+    scannedAt: lastSync?.finished_at || new Date().toISOString(),
+    totalObservedWallets: totalWallets,
+    botWallets: bots.size,
+    humanWallets,
     totalTrades,
-    medianVolume30d: medianVol,
-    medianTrades30d: medianTrades,
-    avgVolume30d: avgVol,
-    observationStart: timeRange?.mn || 0,
-    observationEnd: timeRange?.mx || 0,
-    daysWithData,
-    lastSync: lastSync?.finished_at || null,
+    humanTrades: humanTradesCount,
+    medianVolume: medianVol,
+    avgVolume: avgVol,
+    medianTrades,
+    eventsScanned,
   };
 }
 
-// --- Daily Activity ---
-
-export interface DailyActivity {
-  date: string;
-  activeWallets: number;
-  trades: number;
-  volume: number;
-}
-
-export function queryDailyActivity(): DailyActivity[] {
-  const db = getDb();
-  const day30 = Math.floor(Date.now() / 1000) - 30 * 86400;
-
-  return db
-    .prepare(
-      `SELECT date(timestamp, 'unixepoch') as date,
-              COUNT(DISTINCT proxy_wallet) as activeWallets,
-              COUNT(*) as trades,
-              SUM(size * price) as volume
-       FROM trades
-       WHERE timestamp >= ?
-       GROUP BY date(timestamp, 'unixepoch')
-       ORDER BY date`
-    )
-    .all(day30) as DailyActivity[];
-}
-
-// --- Size Distribution (30D active) ---
+// --- Size Distribution (human wallets only) ---
 
 export interface SizeBucket {
   label: string;
@@ -137,16 +141,15 @@ export interface SizeBucket {
 
 export function querySizeDistribution(): SizeBucket[] {
   const db = getDb();
-  const day30 = Math.floor(Date.now() / 1000) - 30 * 86400;
 
   const walletVols = db
     .prepare(
       `SELECT SUM(size * price) as vol
        FROM trades
-       WHERE timestamp >= ?
+       WHERE 1=1 ${botFilter()}
        GROUP BY proxy_wallet`
     )
-    .all(day30) as { vol: number }[];
+    .all() as { vol: number }[];
 
   const total = walletVols.length;
   const defs = [
@@ -158,9 +161,7 @@ export function querySizeDistribution(): SizeBucket[] {
   ];
 
   return defs.map((d) => {
-    const count = walletVols.filter(
-      (w) => w.vol >= d.from && w.vol < d.to
-    ).length;
+    const count = walletVols.filter((w) => w.vol >= d.from && w.vol < d.to).length;
     return { label: d.label, count, pct: total > 0 ? count / total : 0, color: d.color };
   });
 }
@@ -176,30 +177,27 @@ export interface ConcentrationPoint {
 
 export function queryConcentration(): ConcentrationPoint[] {
   const db = getDb();
-  const day30 = Math.floor(Date.now() / 1000) - 30 * 86400;
 
   const walletVols = db
     .prepare(
       `SELECT SUM(size * price) as vol
        FROM trades
-       WHERE timestamp >= ?
+       WHERE 1=1 ${botFilter()}
        GROUP BY proxy_wallet
        ORDER BY vol DESC`
     )
-    .all(day30) as { vol: number }[];
+    .all() as { vol: number }[];
 
   const totalVol = walletVols.reduce((s, w) => s + w.vol, 0);
   const n = walletVols.length;
 
-  const cuts = [
+  return [
     { label: "Top 1%", pct: 0.01, color: "#ef4444" },
     { label: "Top 5%", pct: 0.05, color: "#f59e0b" },
     { label: "Top 10%", pct: 0.10, color: "#6366f1" },
     { label: "Top 25%", pct: 0.25, color: "#8b5cf6" },
     { label: "Top 50%", pct: 0.50, color: "#a78bfa" },
-  ];
-
-  return cuts.map((c) => {
+  ].map((c) => {
     const count = Math.ceil(n * c.pct);
     const sliceVol = walletVols.slice(0, count).reduce((s, w) => s + w.vol, 0);
     return {
@@ -215,16 +213,15 @@ export function queryConcentration(): ConcentrationPoint[] {
 
 export function queryFrequencyDistribution(): SizeBucket[] {
   const db = getDb();
-  const day30 = Math.floor(Date.now() / 1000) - 30 * 86400;
 
   const walletTrades = db
     .prepare(
       `SELECT COUNT(*) as cnt
        FROM trades
-       WHERE timestamp >= ?
+       WHERE 1=1 ${botFilter()}
        GROUP BY proxy_wallet`
     )
-    .all(day30) as { cnt: number }[];
+    .all() as { cnt: number }[];
 
   const total = walletTrades.length;
   const defs = [
@@ -232,14 +229,12 @@ export function queryFrequencyDistribution(): SizeBucket[] {
     { label: "2–5", from: 2, to: 6, color: "#a78bfa" },
     { label: "6–20", from: 6, to: 21, color: "#6366f1" },
     { label: "21–50", from: 21, to: 51, color: "#f59e0b" },
-    { label: "51–100", from: 51, to: 101, color: "#f97316" },
-    { label: "> 100", from: 101, to: Infinity, color: "#ef4444" },
+    { label: "51–200", from: 51, to: 201, color: "#f97316" },
+    { label: "> 200", from: 201, to: Infinity, color: "#ef4444" },
   ];
 
   return defs.map((d) => {
-    const count = walletTrades.filter(
-      (w) => w.cnt >= d.from && w.cnt < d.to
-    ).length;
+    const count = walletTrades.filter((w) => w.cnt >= d.from && w.cnt < d.to).length;
     return { label: d.label, count, pct: total > 0 ? count / total : 0, color: d.color };
   });
 }
@@ -248,16 +243,15 @@ export function queryFrequencyDistribution(): SizeBucket[] {
 
 export function queryMarketBreadth(): SizeBucket[] {
   const db = getDb();
-  const day30 = Math.floor(Date.now() / 1000) - 30 * 86400;
 
   const walletMarkets = db
     .prepare(
       `SELECT COUNT(DISTINCT condition_id) as cnt
        FROM trades
-       WHERE timestamp >= ?
+       WHERE 1=1 ${botFilter()}
        GROUP BY proxy_wallet`
     )
-    .all(day30) as { cnt: number }[];
+    .all() as { cnt: number }[];
 
   const total = walletMarkets.length;
   const defs = [
@@ -269,9 +263,7 @@ export function queryMarketBreadth(): SizeBucket[] {
   ];
 
   return defs.map((d) => {
-    const count = walletMarkets.filter(
-      (w) => w.cnt >= d.from && w.cnt < d.to
-    ).length;
+    const count = walletMarkets.filter((w) => w.cnt >= d.from && w.cnt < d.to).length;
     return { label: d.label, count, pct: total > 0 ? count / total : 0, color: d.color };
   });
 }
@@ -287,7 +279,6 @@ export interface BuySellStats {
 
 export function queryBuySellStats(): BuySellStats {
   const db = getDb();
-  const day30 = Math.floor(Date.now() / 1000) - 30 * 86400;
 
   const walletSides = db
     .prepare(
@@ -295,15 +286,12 @@ export function queryBuySellStats(): BuySellStats {
          SUM(CASE WHEN side = 'BUY' THEN 1 ELSE 0 END) as buys,
          SUM(CASE WHEN side = 'SELL' THEN 1 ELSE 0 END) as sells
        FROM trades
-       WHERE timestamp >= ?
+       WHERE 1=1 ${botFilter()}
        GROUP BY proxy_wallet`
     )
-    .all(day30) as { buys: number; sells: number }[];
+    .all() as { buys: number; sells: number }[];
 
-  let buyDom = 0,
-    sellDom = 0,
-    balanced = 0;
-
+  let buyDom = 0, sellDom = 0, balanced = 0;
   for (const w of walletSides) {
     if (w.buys > w.sells * 1.5) buyDom++;
     else if (w.sells > w.buys * 1.5) sellDom++;
