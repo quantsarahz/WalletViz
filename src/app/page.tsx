@@ -60,8 +60,7 @@ export default function Home() {
     setLoading(true);
     setError(null);
     try {
-      const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
-      const res = await fetch(`${base}/data/snapshot.json`);
+      const res = await fetch("data/snapshot.json");
       if (!res.ok) throw new Error("Failed to load");
       setData(await res.json());
     } catch {
