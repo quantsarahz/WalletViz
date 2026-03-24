@@ -268,6 +268,65 @@ export function queryMarketBreadth(): SizeBucket[] {
   });
 }
 
+// --- Gini Coefficient & Lorenz Curve ---
+
+export interface GiniData {
+  giniVolume: number;
+  giniTrades: number;
+  lorenz: { cumWalletPct: number; cumVolPct: number }[];
+}
+
+export function queryGini(): GiniData {
+  const db = getDb();
+
+  const walletVols = db
+    .prepare(
+      `SELECT SUM(size * price) as vol, COUNT(*) as cnt
+       FROM trades
+       WHERE 1=1 ${botFilter()}
+       GROUP BY proxy_wallet
+       ORDER BY vol ASC`
+    )
+    .all() as { vol: number; cnt: number }[];
+
+  const n = walletVols.length;
+  const totalVol = walletVols.reduce((s, w) => s + w.vol, 0);
+  const totalTrades = walletVols.reduce((s, w) => s + w.cnt, 0);
+
+  // Gini for volume
+  let giniVolSum = 0;
+  for (let i = 0; i < n; i++) {
+    giniVolSum += (2 * (i + 1) - n - 1) * walletVols[i].vol;
+  }
+  const giniVolume = n > 0 && totalVol > 0 ? giniVolSum / (n * totalVol) : 0;
+
+  // Gini for trades
+  const sortedByTrades = [...walletVols].sort((a, b) => a.cnt - b.cnt);
+  let giniTradeSum = 0;
+  for (let i = 0; i < n; i++) {
+    giniTradeSum += (2 * (i + 1) - n - 1) * sortedByTrades[i].cnt;
+  }
+  const giniTrades = n > 0 && totalTrades > 0 ? giniTradeSum / (n * totalTrades) : 0;
+
+  // Lorenz curve (20 points)
+  const lorenz: { cumWalletPct: number; cumVolPct: number }[] = [
+    { cumWalletPct: 0, cumVolPct: 0 },
+  ];
+  let cumVol = 0;
+  const step = Math.max(Math.floor(n / 20), 1);
+  for (let i = 0; i < n; i++) {
+    cumVol += walletVols[i].vol;
+    if ((i + 1) % step === 0 || i === n - 1) {
+      lorenz.push({
+        cumWalletPct: (i + 1) / n,
+        cumVolPct: cumVol / totalVol,
+      });
+    }
+  }
+
+  return { giniVolume, giniTrades, lorenz };
+}
+
 // --- Buy/Sell Behavior ---
 
 export interface BuySellStats {

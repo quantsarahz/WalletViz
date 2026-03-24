@@ -145,6 +145,34 @@ function run() {
     else balanced++;
   }
 
+  // Gini coefficient & Lorenz curve
+  const walletVolsAsc = [...walletVols].sort((a, b) => a.vol - b.vol);
+  const n = walletVolsAsc.length;
+  const giniTotalVol = walletVolsAsc.reduce((s, w) => s + w.vol, 0);
+  let giniVolSum = 0;
+  for (let i = 0; i < n; i++) {
+    giniVolSum += (2 * (i + 1) - n - 1) * walletVolsAsc[i].vol;
+  }
+  const giniVolume = n > 0 && giniTotalVol > 0 ? giniVolSum / (n * giniTotalVol) : 0;
+
+  const walletTradesAsc = [...walletTrades].sort((a, b) => a.cnt - b.cnt);
+  const totalTradesNum = walletTradesAsc.reduce((s, w) => s + w.cnt, 0);
+  let giniTradeSum = 0;
+  for (let i = 0; i < n; i++) {
+    giniTradeSum += (2 * (i + 1) - n - 1) * (walletTradesAsc[i]?.cnt || 0);
+  }
+  const giniTrades = n > 0 && totalTradesNum > 0 ? giniTradeSum / (n * totalTradesNum) : 0;
+
+  const lorenz: { cumWalletPct: number; cumVolPct: number }[] = [{ cumWalletPct: 0, cumVolPct: 0 }];
+  let cumVol = 0;
+  const step = Math.max(Math.floor(n / 20), 1);
+  for (let i = 0; i < n; i++) {
+    cumVol += walletVolsAsc[i].vol;
+    if ((i + 1) % step === 0 || i === n - 1) {
+      lorenz.push({ cumWalletPct: (i + 1) / n, cumVolPct: cumVol / giniTotalVol });
+    }
+  }
+
   const snapshot = {
     overview,
     sizeDistribution,
@@ -152,6 +180,7 @@ function run() {
     frequencyDistribution,
     marketBreadth,
     buySell: { buyDominant: buyDom, sellDominant: sellDom, balanced, total: walletSides.length },
+    gini: { giniVolume, giniTrades, lorenz },
   };
 
   // Write

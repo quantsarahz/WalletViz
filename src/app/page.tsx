@@ -2,21 +2,14 @@
 
 import { useState, useEffect } from "react";
 import StatsCard from "@/components/StatsCard";
-import TierPieChart from "@/components/TierPieChart";
 import DistributionChart from "@/components/DistributionChart";
 import ConcentrationChart from "@/components/ConcentrationChart";
+import LorenzChart from "@/components/LorenzChart";
 
 interface SizeBucket {
   label: string;
   count: number;
   pct: number;
-  color: string;
-}
-
-interface ConcentrationPoint {
-  label: string;
-  walletPct: number;
-  volPct: number;
   color: string;
 }
 
@@ -34,14 +27,14 @@ interface SnapshotData {
     eventsScanned: number;
   };
   sizeDistribution: SizeBucket[];
-  concentration: ConcentrationPoint[];
+  concentration: { label: string; walletPct: number; volPct: number; color: string }[];
   frequencyDistribution: SizeBucket[];
   marketBreadth: SizeBucket[];
-  buySell: {
-    buyDominant: number;
-    sellDominant: number;
-    balanced: number;
-    total: number;
+  buySell: { buyDominant: number; sellDominant: number; balanced: number; total: number };
+  gini: {
+    giniVolume: number;
+    giniTrades: number;
+    lorenz: { cumWalletPct: number; cumVolPct: number }[];
   };
 }
 
@@ -56,42 +49,28 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("data/snapshot.json");
-      if (!res.ok) throw new Error("Failed to load");
-      setData(await res.json());
-    } catch {
-      setError("Failed to load data.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchData();
+    fetch("data/snapshot.json")
+      .then((r) => r.json())
+      .then(setData)
+      .catch(() => setError("Failed to load data."))
+      .finally(() => setLoading(false));
   }, []);
 
   const o = data?.overview;
 
   return (
     <main className="min-h-screen p-6 md:p-10 max-w-7xl mx-auto">
-      {/* Header */}
+      {/* ===== Header ===== */}
       <header className="mb-10">
         <h1 className="text-4xl font-bold tracking-tight">
           Wallet<span className="text-indigo-400">Viz</span>
         </h1>
         <p className="mt-2 text-lg text-gray-400">
-          Polymarket Wallet Landscape
+          Polymarket Active Wallet Snapshot
         </p>
-        <p className="mt-1 text-sm text-gray-500">
-          Cross-sectional snapshot of the Polymarket wallet ecosystem
-        </p>
-
         {o && (
-          <p className="mt-4 text-xs text-gray-500">
+          <p className="mt-2 text-xs text-gray-500">
             Last scan: {new Date(o.scannedAt).toLocaleString()}
           </p>
         )}
@@ -109,49 +88,38 @@ export default function Home() {
       {data && o && (
         <>
           {/* ===== Methodology ===== */}
-          <section className="mb-10 rounded-lg border border-gray-700/50 bg-gray-800/30 px-5 py-4 text-sm text-gray-400 leading-relaxed space-y-2">
+          <section className="mb-10 rounded-lg border border-gray-700/50 bg-gray-800/30 px-5 py-4 text-xs text-gray-400 leading-relaxed space-y-2">
             <p>
-              <strong className="text-gray-300">What this is:</strong> A
-              cross-sectional scan of the Polymarket wallet ecosystem. We
-              collected the most recent 1,000 trades from each of{" "}
-              <strong className="text-gray-300">
-                {o.eventsScanned.toLocaleString()}
-              </strong>{" "}
-              active events, yielding{" "}
-              <strong className="text-gray-300">
-                {o.totalTrades.toLocaleString()}
-              </strong>{" "}
-              trades and{" "}
-              <strong className="text-gray-300">
-                {o.totalObservedWallets.toLocaleString()}
-              </strong>{" "}
-              unique wallets.
+              <strong className="text-gray-300">What this is:</strong> Snapshot
+              of Polymarket wallet activity — latest 1,000 trades from each of{" "}
+              <strong className="text-gray-300">{o.eventsScanned.toLocaleString()}</strong> events
+              ({o.totalTrades.toLocaleString()} trades, {o.totalObservedWallets.toLocaleString()} wallets).
+              Activity-weighted: high-frequency wallets appear more prominently.
             </p>
             <p>
               <strong className="text-gray-300">Bot filtering:</strong>{" "}
-              {o.botWallets.toLocaleString()} wallets identified as bots
-              (averaging &gt;50 trades/day) and excluded from all analysis
-              below. Remaining:{" "}
-              <strong className="text-gray-300">
-                {o.humanWallets.toLocaleString()}
-              </strong>{" "}
-              human wallets.
+              {o.botWallets.toLocaleString()} bots excluded (avg &gt;50 trades/day).
+              Remaining: <strong className="text-gray-300">{o.humanWallets.toLocaleString()}</strong> human wallets.
             </p>
             <p>
-              <strong className="text-gray-300">What this is not:</strong> This
-              is not a complete census of all Polymarket users. It is a
-              representative snapshot of wallets with recent trading activity
-              across active markets. The true number of active wallets is likely
-              higher.
+              <strong className="text-gray-300">What this is not:</strong> Not a
+              complete census or equal-weight sample. High-frequency traders and
+              active markets are overrepresented.
+            </p>
+            <p>
+              <strong className="text-gray-300">Sampling bias:</strong> Volume
+              figures are <em>observed within this sample</em>, not lifetime
+              totals. High-volume events cover hours; low-volume events span
+              weeks. Treat all volume metrics as lower-bound estimates.
             </p>
           </section>
 
-          {/* ===== Overview ===== */}
+          {/* ===== Snapshot Overview ===== */}
           <section className="mb-12">
             <h2 className="text-2xl font-semibold mb-6">Snapshot Overview</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
               <StatsCard
-                label="Human Wallets"
+                label="Observed Human Wallets"
                 value={o.humanWallets.toLocaleString()}
                 description="After bot filtering"
                 color="#6366f1"
@@ -159,25 +127,25 @@ export default function Home() {
               <StatsCard
                 label="Bot Wallets"
                 value={o.botWallets.toLocaleString()}
-                description={`${((o.botWallets / o.totalObservedWallets) * 100).toFixed(1)}% of observed`}
+                description={`${((o.botWallets / o.totalObservedWallets) * 100).toFixed(1)}% of total observed`}
                 color="#ef4444"
               />
               <StatsCard
                 label="Median Volume"
                 value={fmt(o.medianVolume)}
-                description="Per human wallet"
+                description="Per wallet, observed"
                 color="#f59e0b"
               />
               <StatsCard
                 label="Avg Volume"
                 value={fmt(o.avgVolume)}
-                description="Per human wallet"
+                description="Activity-weighted"
                 color="#f59e0b"
               />
               <StatsCard
                 label="Median Trades"
                 value={o.medianTrades.toString()}
-                description="Per human wallet"
+                description="Observed"
                 color="#94a3b8"
               />
             </div>
@@ -187,126 +155,230 @@ export default function Home() {
           <section className="mb-12">
             <h2 className="text-2xl font-semibold mb-2">Distribution</h2>
             <p className="text-xs text-gray-500 mb-6">
-              Based on {o.humanWallets.toLocaleString()} human wallets (bots
-              excluded)
+              All distributions below are based on {o.humanWallets.toLocaleString()} observed
+              human wallets. Figures reflect activity within this sample, not
+              total platform activity.
             </p>
 
-            {/* Row 1: Size + Frequency */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6">
-                <h3 className="text-sm text-gray-400 mb-4">
-                  Wallet Size (by Observed Volume)
-                </h3>
-                <TierPieChart
-                  data={data.sizeDistribution.map((s) => ({
-                    label: s.label,
-                    value: s.count,
-                    pct: s.pct,
-                    color: s.color,
-                  }))}
-                  valueLabel="Wallets"
-                />
-              </div>
-              <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6">
-                <h3 className="text-sm text-gray-400 mb-4">Trade Frequency</h3>
-                <TierPieChart
-                  data={data.frequencyDistribution.map((s) => ({
-                    label: s.label,
-                    value: s.count,
-                    pct: s.pct,
-                    color: s.color,
-                  }))}
-                  valueLabel="Wallets"
-                />
-              </div>
+            {/* Wallet Size — Horizontal Bar */}
+            <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6 mb-6">
+              <h3 className="text-sm text-gray-400 mb-1">
+                Wallet Size Distribution (by Observed Volume)
+              </h3>
+              <p className="text-xs text-gray-600 mb-4">
+                Based on observed trading activity. Only {data.sizeDistribution.find(s => s.label.includes("Whale"))?.pct
+                  ? (data.sizeDistribution.find(s => s.label.includes("Whale"))!.pct * 100).toFixed(1)
+                  : "0.9"}% of wallets in observed trading activity fall into the whale category.
+              </p>
+              <DistributionChart
+                data={data.sizeDistribution.map((s) => ({ range: s.label, count: s.count }))}
+                color="#6366f1"
+                label="Wallets"
+              />
             </div>
 
-            {/* Row 2: Market Breadth + Buy/Sell */}
+            {/* Trade Frequency */}
+            <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6 mb-6">
+              <h3 className="text-sm text-gray-400 mb-1">Trade Frequency Distribution</h3>
+              <p className="text-xs text-gray-600 mb-4">
+                Number of observed trades per wallet in this snapshot.
+              </p>
+              <DistributionChart
+                data={data.frequencyDistribution.map((s) => ({ range: s.label, count: s.count }))}
+                color="#f59e0b"
+                label="Wallets"
+              />
+            </div>
+
+            {/* Market Breadth + Buy/Sell — side by side */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6">
-                <h3 className="text-sm text-gray-400 mb-4">
-                  Market Participation
-                </h3>
-                <TierPieChart
-                  data={data.marketBreadth.map((s) => ({
-                    label: s.label,
-                    value: s.count,
-                    pct: s.pct,
-                    color: s.color,
-                  }))}
-                  valueLabel="Wallets"
+                <h3 className="text-sm text-gray-400 mb-1">Market Participation</h3>
+                <p className="text-xs text-gray-600 mb-4">
+                  Number of distinct markets per wallet, based on observed activity.
+                </p>
+                <DistributionChart
+                  data={data.marketBreadth.map((s) => ({ range: s.label, count: s.count }))}
+                  color="#8b5cf6"
+                  label="Wallets"
                 />
               </div>
               <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6">
-                <h3 className="text-sm text-gray-400 mb-4">
-                  Buy vs Sell Behavior
-                </h3>
-                <TierPieChart
+                <h3 className="text-sm text-gray-400 mb-1">Buy vs Sell Behavior</h3>
+                <p className="text-xs text-gray-600 mb-4">
+                  Wallet classification by observed buy/sell ratio (1.5x threshold).
+                </p>
+                <DistributionChart
                   data={[
-                    {
-                      label: "Buy-dominant",
-                      value: data.buySell.buyDominant,
-                      pct: data.buySell.buyDominant / data.buySell.total,
-                      color: "#10b981",
-                    },
-                    {
-                      label: "Sell-dominant",
-                      value: data.buySell.sellDominant,
-                      pct: data.buySell.sellDominant / data.buySell.total,
-                      color: "#ef4444",
-                    },
-                    {
-                      label: "Balanced",
-                      value: data.buySell.balanced,
-                      pct: data.buySell.balanced / data.buySell.total,
-                      color: "#94a3b8",
-                    },
+                    { range: "Buy-dominant", count: data.buySell.buyDominant },
+                    { range: "Balanced", count: data.buySell.balanced },
+                    { range: "Sell-dominant", count: data.buySell.sellDominant },
                   ]}
-                  valueLabel="Wallets"
+                  color="#10b981"
+                  label="Wallets"
                 />
               </div>
             </div>
 
             {/* Concentration */}
             <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6 mb-6">
-              <h3 className="text-sm text-gray-400 mb-1">
-                Volume Concentration
-              </h3>
+              <h3 className="text-sm text-gray-400 mb-1">Volume Concentration</h3>
               <p className="text-xs text-gray-600 mb-4">
-                What share of total observed volume is held by the top N% of
-                human wallets?
+                Share of total observed volume held by the top N% of human wallets.
               </p>
               <ConcentrationChart data={data.concentration} />
             </div>
 
-            {/* Histograms */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6">
-                <h3 className="text-sm text-gray-400 mb-2">
-                  Volume Distribution
-                </h3>
-                <DistributionChart
-                  data={data.sizeDistribution.map((s) => ({
-                    range: s.label.replace(/[()]/g, ""),
-                    count: s.count,
-                  }))}
-                  color="#6366f1"
-                  label="Wallets"
-                />
+            {/* Lorenz Curve */}
+            <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6 mb-6">
+              <h3 className="text-sm text-gray-400 mb-1">
+                Lorenz Curve (Volume Inequality)
+              </h3>
+              <p className="text-xs text-gray-600 mb-4">
+                The further the curve bows from the diagonal, the more unequal
+                the distribution. Based on observed volume.
+              </p>
+              <LorenzChart data={data.gini.lorenz} gini={data.gini.giniVolume} />
+            </div>
+
+            {/* Gini Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-5">
+                <p className="text-sm text-gray-400">Gini Coefficient (Volume)</p>
+                <p className="text-3xl font-bold text-indigo-400 mt-1">
+                  {data.gini.giniVolume.toFixed(3)}
+                </p>
+                <p className="text-xs text-gray-600 mt-1">
+                  Extremely high inequality. Comparable to global wealth distribution (~0.85).
+                </p>
               </div>
-              <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6">
-                <h3 className="text-sm text-gray-400 mb-2">
-                  Trade Frequency
-                </h3>
-                <DistributionChart
-                  data={data.frequencyDistribution.map((s) => ({
-                    range: s.label,
-                    count: s.count,
-                  }))}
-                  color="#f59e0b"
-                  label="Wallets"
-                />
+              <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-5">
+                <p className="text-sm text-gray-400">Gini Coefficient (Trade Count)</p>
+                <p className="text-3xl font-bold text-amber-400 mt-1">
+                  {data.gini.giniTrades.toFixed(3)}
+                </p>
+                <p className="text-xs text-gray-600 mt-1">
+                  High inequality, but less extreme than volume — many small
+                  wallets trade occasionally.
+                </p>
               </div>
+            </div>
+          </section>
+
+          {/* ===== Insights ===== */}
+          <section className="mb-12">
+            <h2 className="text-2xl font-semibold mb-6">Insights</h2>
+            <div className="space-y-4">
+              {[
+                {
+                  title: "Long-tail market structure",
+                  body: "The vast majority of wallets are small, low-frequency participants. This is consistent with prediction markets acting as retail-accessible instruments with low barriers to entry.",
+                },
+                {
+                  title: "Extreme volume concentration",
+                  body: `A Gini coefficient of ${data.gini.giniVolume.toFixed(2)} for volume indicates that trading activity is overwhelmingly driven by a small minority. The top 1% of wallets account for the majority of observed volume — a pattern typical of speculative markets.`,
+                },
+                {
+                  title: "Whale participation is rare but dominant",
+                  body: `Only ${(data.sizeDistribution.find(s => s.label.includes("Whale"))?.pct ?? 0 * 100).toFixed(1)}% of wallets in observed trading activity fall into the whale category (>$10K observed volume), yet they likely account for a disproportionate share of total market activity.`,
+                },
+                {
+                  title: "Most wallets are single-market participants",
+                  body: `${((data.marketBreadth.find(s => s.label === "1 market")?.pct ?? 0) * 100).toFixed(0)}% of observed wallets traded in only one market, suggesting most users enter Polymarket for specific events rather than as habitual platform users.`,
+                },
+              ].map((insight) => (
+                <div
+                  key={insight.title}
+                  className="rounded-lg border border-gray-800 bg-gray-900/30 px-5 py-4"
+                >
+                  <h3 className="text-sm font-semibold text-gray-200">
+                    {insight.title}
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-400 leading-relaxed">
+                    {insight.body}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* ===== So What ===== */}
+          <section className="mb-12">
+            <h2 className="text-2xl font-semibold mb-6">So What?</h2>
+            <div className="rounded-lg border border-indigo-900/50 bg-indigo-950/20 px-5 py-5 space-y-4 text-sm text-gray-400 leading-relaxed">
+              <p>
+                <strong className="text-gray-200">For traders:</strong> You are
+                competing in a market dominated by a small number of
+                high-volume participants. Understanding who you are trading
+                against — and that most counterparties are small,
+                single-event participants — can inform your sizing and
+                strategy.
+              </p>
+              <p>
+                <strong className="text-gray-200">For researchers:</strong> The
+                extreme Gini coefficient ({data.gini.giniVolume.toFixed(2)}) and
+                long-tail structure suggest that Polymarket&apos;s
+                price-discovery mechanism is driven by a narrow base of active
+                traders, while the majority of participants contribute minimal
+                liquidity. This has implications for market efficiency and
+                information aggregation quality.
+              </p>
+              <p>
+                <strong className="text-gray-200">For Polymarket:</strong> The
+                high proportion of single-market, low-frequency wallets
+                indicates successful user acquisition for headline events, but
+                low retention and cross-market engagement. Growing the
+                &quot;middle class&quot; of medium-frequency traders could
+                improve liquidity depth and market quality.
+              </p>
+            </div>
+          </section>
+
+          {/* ===== What's Next ===== */}
+          <section className="mb-12">
+            <h2 className="text-2xl font-semibold mb-6">What&apos;s Next</h2>
+            <div className="rounded-lg border border-gray-700/50 bg-gray-800/30 px-5 py-4 text-sm text-gray-400 leading-relaxed space-y-3">
+              <p>
+                This snapshot provides structural insight but cannot answer
+                temporal questions. The following require continuous data
+                collection (real-time trade polling), which is planned:
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-gray-500">
+                <li>
+                  <strong className="text-gray-300">
+                    Is the market expanding or contracting?
+                  </strong>{" "}
+                  — Daily active wallet trend over 30+ days
+                </li>
+                <li>
+                  <strong className="text-gray-300">
+                    Are whales entering or exiting?
+                  </strong>{" "}
+                  — Whale wallet count and volume share over time
+                </li>
+                <li>
+                  <strong className="text-gray-300">
+                    Is user structure evolving?
+                  </strong>{" "}
+                  — Size distribution shift (growing middle class?)
+                </li>
+                <li>
+                  <strong className="text-gray-300">
+                    New user growth rate
+                  </strong>{" "}
+                  — First-seen wallets per day (requires continuous observation)
+                </li>
+                <li>
+                  <strong className="text-gray-300">
+                    Retention and churn
+                  </strong>{" "}
+                  — Do wallets return after their first trade?
+                </li>
+              </ul>
+              <p className="text-xs text-gray-600 mt-2">
+                These features will be available once the real-time data
+                pipeline accumulates sufficient history.
+              </p>
             </div>
           </section>
         </>
@@ -315,7 +387,7 @@ export default function Home() {
       <footer className="mt-12 pb-8 text-center text-xs text-gray-600 space-y-1">
         <p>WalletViz — Open source, built in public.</p>
         <p>
-          Snapshot of the Polymarket wallet ecosystem. Not a complete census.
+          Snapshot of observed Polymarket wallet activity. Not a complete census.
           Refreshed daily.
         </p>
       </footer>
