@@ -2,6 +2,8 @@
 
 **See who's actually trading on Polymarket.**
 
+**[Live Dashboard](https://quantsarahz.github.io/WalletViz/)**
+
 WalletViz scans the entire Polymarket platform and maps out the wallet landscape — how many traders there are, how big they are, and how they behave.
 
 ## Key Findings
