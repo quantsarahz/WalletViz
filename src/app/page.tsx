@@ -334,53 +334,6 @@ export default function Home() {
             </div>
           </section>
 
-          {/* ===== What's Next ===== */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-6">What&apos;s Next</h2>
-            <div className="rounded-lg border border-gray-700/50 bg-gray-800/30 px-5 py-4 text-sm text-gray-400 leading-relaxed space-y-3">
-              <p>
-                This snapshot provides structural insight but cannot answer
-                temporal questions. The following require continuous data
-                collection (real-time trade polling), which is planned:
-              </p>
-              <ul className="list-disc list-inside space-y-1 text-gray-500">
-                <li>
-                  <strong className="text-gray-300">
-                    Is the market expanding or contracting?
-                  </strong>{" "}
-                  — Daily active wallet trend over 30+ days
-                </li>
-                <li>
-                  <strong className="text-gray-300">
-                    Are whales entering or exiting?
-                  </strong>{" "}
-                  — Whale wallet count and volume share over time
-                </li>
-                <li>
-                  <strong className="text-gray-300">
-                    Is user structure evolving?
-                  </strong>{" "}
-                  — Size distribution shift (growing middle class?)
-                </li>
-                <li>
-                  <strong className="text-gray-300">
-                    New user growth rate
-                  </strong>{" "}
-                  — First-seen wallets per day (requires continuous observation)
-                </li>
-                <li>
-                  <strong className="text-gray-300">
-                    Retention and churn
-                  </strong>{" "}
-                  — Do wallets return after their first trade?
-                </li>
-              </ul>
-              <p className="text-xs text-gray-600 mt-2">
-                These features will be available once the real-time data
-                pipeline accumulates sufficient history.
-              </p>
-            </div>
-          </section>
         </>
       )}
 
