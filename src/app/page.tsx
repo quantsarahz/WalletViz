@@ -91,20 +91,11 @@ export default function Home() {
           Cross-sectional snapshot of the Polymarket wallet ecosystem
         </p>
 
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => fetchData()}
-            disabled={loading}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium hover:bg-indigo-500 disabled:opacity-50 transition-colors"
-          >
-            {loading ? "Loading..." : "Reload"}
-          </button>
-          {o && (
-            <span className="text-xs text-gray-500">
-              Scanned: {new Date(o.scannedAt).toLocaleString()}
-            </span>
-          )}
-        </div>
+        {o && (
+          <p className="mt-4 text-xs text-gray-500">
+            Last scan: {new Date(o.scannedAt).toLocaleString()}
+          </p>
+        )}
         {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
       </header>
 
