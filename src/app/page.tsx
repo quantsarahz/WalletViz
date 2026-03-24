@@ -56,22 +56,12 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async (refresh = false) => {
+  const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
-      // Try API first (local dev), fall back to static JSON (Vercel)
-      let res: Response;
-      if (refresh) {
-        res = await fetch("/api/landscape?refresh=1");
-      } else {
-        try {
-          res = await fetch("/api/landscape");
-          if (!res.ok) throw new Error();
-        } catch {
-          res = await fetch("/data/snapshot.json");
-        }
-      }
+      const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+      const res = await fetch(`${base}/data/snapshot.json`);
       if (!res.ok) throw new Error("Failed to load");
       setData(await res.json());
     } catch {
@@ -103,11 +93,11 @@ export default function Home() {
 
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <button
-            onClick={() => fetchData(true)}
+            onClick={() => fetchData()}
             disabled={loading}
             className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium hover:bg-indigo-500 disabled:opacity-50 transition-colors"
           >
-            {loading ? "Loading..." : "Refresh"}
+            {loading ? "Loading..." : "Reload"}
           </button>
           {o && (
             <span className="text-xs text-gray-500">

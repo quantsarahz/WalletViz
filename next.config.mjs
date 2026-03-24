@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
+const isGitHubPages = process.env.GITHUB_ACTIONS === "true";
+
 const nextConfig = {
-  // Exclude native modules from webpack bundling (for local dev API routes)
+  output: "export",
+  basePath: isGitHubPages ? "/WalletViz" : "",
+  assetPrefix: isGitHubPages ? "/WalletViz/" : "",
+  images: { unoptimized: true },
   webpack: (config, { isServer }) => {
     if (isServer) {
       config.externals = [...(config.externals || []), "better-sqlite3"];
