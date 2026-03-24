@@ -160,42 +160,42 @@ export default function Home() {
               total platform activity.
             </p>
 
-            {/* Wallet Size — Horizontal Bar */}
-            <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6 mb-6">
-              <h3 className="text-sm text-gray-400 mb-1">
-                Wallet Size Distribution (by Observed Volume)
-              </h3>
-              <p className="text-xs text-gray-600 mb-4">
-                Based on observed trading activity. Only {data.sizeDistribution.find(s => s.label.includes("Whale"))?.pct
-                  ? (data.sizeDistribution.find(s => s.label.includes("Whale"))!.pct * 100).toFixed(1)
-                  : "0.9"}% of wallets in observed trading activity fall into the whale category.
-              </p>
-              <DistributionChart
-                data={data.sizeDistribution.map((s) => ({ range: s.label, count: s.count }))}
-                color="#6366f1"
-                label="Wallets"
-              />
+            {/* Row 1: Wallet Size + Trade Frequency */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6">
+                <h3 className="text-sm text-gray-400 mb-1">
+                  Wallet Size (by Observed Volume)
+                </h3>
+                <p className="text-xs text-gray-600 mb-4">
+                  Only {data.sizeDistribution.find(s => s.label.includes("Whale"))?.pct
+                    ? (data.sizeDistribution.find(s => s.label.includes("Whale"))!.pct * 100).toFixed(1)
+                    : "0.9"}% of wallets in observed activity fall into the whale category.
+                </p>
+                <DistributionChart
+                  data={data.sizeDistribution.map((s) => ({ range: s.label, count: s.count }))}
+                  color="#6366f1"
+                  label="Wallets"
+                />
+              </div>
+              <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6">
+                <h3 className="text-sm text-gray-400 mb-1">Trade Frequency</h3>
+                <p className="text-xs text-gray-600 mb-4">
+                  Observed trades per wallet in this snapshot.
+                </p>
+                <DistributionChart
+                  data={data.frequencyDistribution.map((s) => ({ range: s.label, count: s.count }))}
+                  color="#f59e0b"
+                  label="Wallets"
+                />
+              </div>
             </div>
 
-            {/* Trade Frequency */}
-            <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6 mb-6">
-              <h3 className="text-sm text-gray-400 mb-1">Trade Frequency Distribution</h3>
-              <p className="text-xs text-gray-600 mb-4">
-                Number of observed trades per wallet in this snapshot.
-              </p>
-              <DistributionChart
-                data={data.frequencyDistribution.map((s) => ({ range: s.label, count: s.count }))}
-                color="#f59e0b"
-                label="Wallets"
-              />
-            </div>
-
-            {/* Market Breadth + Buy/Sell — side by side */}
+            {/* Row 2: Market Breadth + Buy/Sell */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6">
                 <h3 className="text-sm text-gray-400 mb-1">Market Participation</h3>
                 <p className="text-xs text-gray-600 mb-4">
-                  Number of distinct markets per wallet, based on observed activity.
+                  Distinct markets per wallet, based on observed activity.
                 </p>
                 <DistributionChart
                   data={data.marketBreadth.map((s) => ({ range: s.label, count: s.count }))}
@@ -206,7 +206,7 @@ export default function Home() {
               <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6">
                 <h3 className="text-sm text-gray-400 mb-1">Buy vs Sell Behavior</h3>
                 <p className="text-xs text-gray-600 mb-4">
-                  Wallet classification by observed buy/sell ratio (1.5x threshold).
+                  By observed buy/sell ratio (1.5x threshold).
                 </p>
                 <DistributionChart
                   data={[
@@ -220,25 +220,24 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Concentration */}
-            <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6 mb-6">
-              <h3 className="text-sm text-gray-400 mb-1">Volume Concentration</h3>
-              <p className="text-xs text-gray-600 mb-4">
-                Share of total observed volume held by the top N% of human wallets.
-              </p>
-              <ConcentrationChart data={data.concentration} />
-            </div>
-
-            {/* Lorenz Curve */}
-            <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6 mb-6">
-              <h3 className="text-sm text-gray-400 mb-1">
-                Lorenz Curve (Volume Inequality)
-              </h3>
-              <p className="text-xs text-gray-600 mb-4">
-                The further the curve bows from the diagonal, the more unequal
-                the distribution. Based on observed volume.
-              </p>
-              <LorenzChart data={data.gini.lorenz} gini={data.gini.giniVolume} />
+            {/* Row 3: Concentration + Lorenz */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6">
+                <h3 className="text-sm text-gray-400 mb-1">Volume Concentration</h3>
+                <p className="text-xs text-gray-600 mb-4">
+                  Share of observed volume held by top N% of human wallets.
+                </p>
+                <ConcentrationChart data={data.concentration} />
+              </div>
+              <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6">
+                <h3 className="text-sm text-gray-400 mb-1">
+                  Lorenz Curve (Volume Inequality)
+                </h3>
+                <p className="text-xs text-gray-600 mb-4">
+                  Further from diagonal = more unequal. Based on observed volume.
+                </p>
+                <LorenzChart data={data.gini.lorenz} gini={data.gini.giniVolume} />
+              </div>
             </div>
 
             {/* Gini Summary */}
