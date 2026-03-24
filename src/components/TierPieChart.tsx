@@ -16,6 +16,39 @@ interface Props {
   formatValue?: (v: number) => string;
 }
 
+const RADIAN = Math.PI / 180;
+
+function renderLabel({
+  cx,
+  cy,
+  midAngle,
+  outerRadius,
+  pct,
+}: {
+  cx: number;
+  cy: number;
+  midAngle: number;
+  outerRadius: number;
+  pct: number;
+}) {
+  const radius = outerRadius + 30;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="#ccc"
+      fontSize={12}
+      textAnchor={x > cx ? "start" : "end"}
+      dominantBaseline="central"
+    >
+      {(pct * 100).toFixed(1)}%
+    </text>
+  );
+}
+
 export default function TierPieChart({
   data,
   valueLabel = "count",
@@ -24,20 +57,20 @@ export default function TierPieChart({
   const fmt = formatValue || ((v: number) => v.toLocaleString());
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height={350}>
       <PieChart>
         <Pie
           data={data}
           dataKey="value"
           nameKey="label"
           cx="50%"
-          cy="50%"
-          outerRadius={105}
-          innerRadius={50}
+          cy="42%"
+          outerRadius={80}
+          innerRadius={40}
           strokeWidth={2}
           stroke="#111"
-          label={({ pct }) => `${(pct * 100).toFixed(1)}%`}
-          labelLine={{ stroke: "#555" }}
+          label={renderLabel}
+          labelLine={{ stroke: "#555", strokeWidth: 1 }}
         >
           {data.map((entry, i) => (
             <Cell key={i} fill={entry.color} />
