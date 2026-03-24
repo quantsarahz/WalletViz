@@ -10,7 +10,8 @@
     "collect:full": "tsx scripts/collect.ts full",
     "collect:update": "tsx scripts/collect.ts update",
     "collect:purge": "tsx scripts/collect.ts purge",
-    "collect:stats": "tsx scripts/collect.ts stats"
+    "collect:stats": "tsx scripts/collect.ts stats",
+    "export-snapshot": "tsx scripts/export-snapshot.ts"
   },
   "dependencies": {
     "better-sqlite3": "^12.8.0",

@@ -60,9 +60,19 @@ export default function Home() {
     setLoading(true);
     setError(null);
     try {
-      const url = refresh ? "/api/landscape?refresh=1" : "/api/landscape";
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("API request failed");
+      // Try API first (local dev), fall back to static JSON (Vercel)
+      let res: Response;
+      if (refresh) {
+        res = await fetch("/api/landscape?refresh=1");
+      } else {
+        try {
+          res = await fetch("/api/landscape");
+          if (!res.ok) throw new Error();
+        } catch {
+          res = await fetch("/data/snapshot.json");
+        }
+      }
+      if (!res.ok) throw new Error("Failed to load");
       setData(await res.json());
     } catch {
       setError("Failed to load data.");

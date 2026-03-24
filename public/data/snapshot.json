@@ -1,0 +1,154 @@
+{
+  "overview": {
+    "scannedAt": "2026-03-23T14:17:48.091Z",
+    "totalObservedWallets": 177361,
+    "botWallets": 485,
+    "humanWallets": 176876,
+    "totalTrades": 1496714,
+    "humanTrades": 1190738,
+    "medianVolume": 23.382,
+    "avgVolume": 593.8776210200506,
+    "medianTrades": 2,
+    "eventsScanned": 4090
+  },
+  "sizeDistribution": [
+    {
+      "label": "Micro (< $10)",
+      "count": 62230,
+      "pct": 0.3518283995567516,
+      "color": "#94a3b8"
+    },
+    {
+      "label": "Small ($10–$100)",
+      "count": 63664,
+      "pct": 0.3599357742147041,
+      "color": "#a78bfa"
+    },
+    {
+      "label": "Medium ($100–$1K)",
+      "count": 34210,
+      "pct": 0.1934123340645424,
+      "color": "#6366f1"
+    },
+    {
+      "label": "Large ($1K–$10K)",
+      "count": 15131,
+      "pct": 0.0855458061014496,
+      "color": "#f59e0b"
+    },
+    {
+      "label": "Whale (> $10K)",
+      "count": 1641,
+      "pct": 0.009277686062552297,
+      "color": "#ef4444"
+    }
+  ],
+  "concentration": [
+    {
+      "label": "Top 1%",
+      "walletPct": 0.01,
+      "volPct": 0.42924528077767266,
+      "color": "#ef4444"
+    },
+    {
+      "label": "Top 5%",
+      "walletPct": 0.05,
+      "volPct": 0.7443009671061855,
+      "color": "#f59e0b"
+    },
+    {
+      "label": "Top 10%",
+      "walletPct": 0.1,
+      "volPct": 0.8762259287705038,
+      "color": "#6366f1"
+    },
+    {
+      "label": "Top 25%",
+      "walletPct": 0.25,
+      "volPct": 0.9675384058867511,
+      "color": "#8b5cf6"
+    },
+    {
+      "label": "Top 50%",
+      "walletPct": 0.5,
+      "volPct": 0.9935249865277854,
+      "color": "#a78bfa"
+    }
+  ],
+  "frequencyDistribution": [
+    {
+      "label": "1 trade",
+      "count": 74203,
+      "pct": 0.41951988964019993,
+      "color": "#94a3b8"
+    },
+    {
+      "label": "2–5",
+      "count": 69163,
+      "pct": 0.3910253510934214,
+      "color": "#a78bfa"
+    },
+    {
+      "label": "6–20",
+      "count": 24929,
+      "pct": 0.14094054591917501,
+      "color": "#6366f1"
+    },
+    {
+      "label": "21–50",
+      "count": 5715,
+      "pct": 0.032310771387864944,
+      "color": "#f59e0b"
+    },
+    {
+      "label": "51–200",
+      "count": 2390,
+      "pct": 0.01351229109658744,
+      "color": "#f97316"
+    },
+    {
+      "label": "> 200",
+      "count": 476,
+      "pct": 0.002691150862751306,
+      "color": "#ef4444"
+    }
+  ],
+  "marketBreadth": [
+    {
+      "label": "1 market",
+      "count": 99998,
+      "pct": 0.5653565209525317,
+      "color": "#94a3b8"
+    },
+    {
+      "label": "2–3",
+      "count": 43231,
+      "pct": 0.24441416585630613,
+      "color": "#a78bfa"
+    },
+    {
+      "label": "4–10",
+      "count": 24821,
+      "pct": 0.1403299486646012,
+      "color": "#6366f1"
+    },
+    {
+      "label": "11–20",
+      "count": 5415,
+      "pct": 0.03061466790293765,
+      "color": "#f59e0b"
+    },
+    {
+      "label": "> 20",
+      "count": 3411,
+      "pct": 0.01928469662362333,
+      "color": "#ef4444"
+    }
+  ],
+  "buySell": {
+    "buyDominant": 106651,
+    "sellDominant": 32745,
+    "balanced": 37480,
+    "total": 176876
+  }
+}
