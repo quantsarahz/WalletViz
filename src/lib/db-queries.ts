@@ -2,8 +2,7 @@ import { getDb } from "./db";
 
 /**
  * Bot threshold: wallets averaging > 100 trades/day are classified as bots.
- * This affects ~0.3% of wallets (P99.5+) and removes automated market makers,
- * arbitrage bots, and other non-human actors.
+ * Removes automated market makers, arbitrage bots, and other non-human actors.
  */
 const BOT_DAILY_TRADE_THRESHOLD = 100;
 
@@ -70,21 +69,7 @@ export function querySnapshotOverview(): SnapshotOverview {
     db.prepare("SELECT COUNT(DISTINCT event_id) as c FROM trades").get() as any
   ).c;
 
-  // Human-only stats
-  const humanWalletStats = db
-    .prepare(
-      `SELECT SUM(vol) as vol, SUM(cnt) as cnt FROM (
-         SELECT proxy_wallet, SUM(size * price) as vol, COUNT(*) as cnt
-         FROM trades
-         WHERE 1=1 ${botFilter()}
-         GROUP BY proxy_wallet
-       )`
-    )
-    .get() as any;
-
-  const humanWallets = totalWallets - bots.size;
-
-  // Median volume and trades for human wallets
+  // Per-wallet stats for human wallets
   const humanPerWallet = db
     .prepare(
       `SELECT SUM(size * price) as vol, COUNT(*) as cnt
@@ -99,6 +84,9 @@ export function querySnapshotOverview(): SnapshotOverview {
   let medianTrades = 0;
   let avgVol = 0;
 
+  // Use humanPerWallet.length as the authoritative human wallet count
+  const humanWallets = humanPerWallet.length;
+
   if (humanPerWallet.length > 0) {
     const mid = Math.floor(humanPerWallet.length / 2);
     medianVol = humanPerWallet[mid].vol;
@@ -111,15 +99,12 @@ export function querySnapshotOverview(): SnapshotOverview {
     .prepare("SELECT finished_at FROM sync_log ORDER BY id DESC LIMIT 1")
     .get() as any;
 
-  // Count human-only trades
-  const humanTradesCount = (
-    db.prepare(`SELECT COUNT(*) as c FROM trades WHERE 1=1 ${botFilter()}`).get() as any
-  ).c;
+  const humanTradesCount = humanPerWallet.reduce((s, w) => s + w.cnt, 0);
 
   return {
     scannedAt: lastSync?.finished_at || new Date().toISOString(),
     totalObservedWallets: totalWallets,
-    botWallets: bots.size,
+    botWallets: totalWallets - humanWallets,
     humanWallets,
     totalTrades,
     humanTrades: humanTradesCount,

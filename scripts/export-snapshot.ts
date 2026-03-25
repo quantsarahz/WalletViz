@@ -35,16 +35,13 @@ function run() {
   const totalWallets = (db.prepare("SELECT COUNT(DISTINCT proxy_wallet) as c FROM trades").get() as any).c;
   const totalTrades = (db.prepare("SELECT COUNT(*) as c FROM trades").get() as any).c;
   const eventsScanned = (db.prepare("SELECT COUNT(DISTINCT event_id) as c FROM trades").get() as any).c;
-  const botCount = (db.prepare(`SELECT COUNT(*) as c FROM (
-    SELECT proxy_wallet FROM trades GROUP BY proxy_wallet
-    HAVING (CAST(COUNT(*) AS REAL) / MAX(CAST(MAX(timestamp) - MIN(timestamp) AS REAL) / 86400.0, 1.0)) > ${BOT_DAILY_TRADE_THRESHOLD}
-  )`).get() as any).c;
-  const humanWallets = totalWallets - botCount;
-  const humanTrades = (db.prepare(`SELECT COUNT(*) as c FROM trades WHERE 1=1 ${botFilterSQL}`).get() as any).c;
-
   const humanPerWallet = db.prepare(
     `SELECT SUM(size * price) as vol, COUNT(*) as cnt FROM trades WHERE 1=1 ${botFilterSQL} GROUP BY proxy_wallet ORDER BY vol`
   ).all() as { vol: number; cnt: number }[];
+
+  const humanWallets = humanPerWallet.length;
+  const botCount = totalWallets - humanWallets;
+  const humanTrades = humanPerWallet.reduce((s, w) => s + w.cnt, 0);
 
   const mid = Math.floor(humanPerWallet.length / 2);
   const medianVol = humanPerWallet.length > 0 ? humanPerWallet[mid].vol : 0;
@@ -156,12 +153,13 @@ function run() {
   const giniVolume = n > 0 && giniTotalVol > 0 ? giniVolSum / (n * giniTotalVol) : 0;
 
   const walletTradesAsc = [...walletTrades].sort((a, b) => a.cnt - b.cnt);
+  const nTrades = walletTradesAsc.length;
   const totalTradesNum = walletTradesAsc.reduce((s, w) => s + w.cnt, 0);
   let giniTradeSum = 0;
-  for (let i = 0; i < n; i++) {
-    giniTradeSum += (2 * (i + 1) - n - 1) * (walletTradesAsc[i]?.cnt || 0);
+  for (let i = 0; i < nTrades; i++) {
+    giniTradeSum += (2 * (i + 1) - nTrades - 1) * walletTradesAsc[i].cnt;
   }
-  const giniTrades = n > 0 && totalTradesNum > 0 ? giniTradeSum / (n * totalTradesNum) : 0;
+  const giniTrades = nTrades > 0 && totalTradesNum > 0 ? giniTradeSum / (nTrades * totalTradesNum) : 0;
 
   const lorenz: { cumWalletPct: number; cumVolPct: number }[] = [{ cumWalletPct: 0, cumVolPct: 0 }];
   let cumVol = 0;
