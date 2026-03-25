@@ -279,7 +279,7 @@ export default function Home() {
                 },
                 {
                   title: "Whale participation is rare but dominant",
-                  body: `Only ${(data.sizeDistribution.find(s => s.label.includes("Whale"))?.pct ?? 0 * 100).toFixed(1)}% of wallets in observed trading activity fall into the whale category (>$10K observed volume), yet they likely account for a disproportionate share of total market activity.`,
+                  body: `Only ${((data.sizeDistribution.find(s => s.label.includes("Whale"))?.pct ?? 0) * 100).toFixed(1)}% of wallets in observed trading activity fall into the whale category (>$10K observed volume), yet they likely account for a disproportionate share of total market activity.`,
                 },
                 {
                   title: "Most wallets are single-market participants",
