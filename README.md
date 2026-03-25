@@ -25,7 +25,7 @@ WalletViz scans every active market on Polymarket and maps out the wallet landsc
 
 ## How It Works
 
-We collect the most recent 1,000 trades from each of ~8,700 active events, filter out bots (>50 trades/day), and analyze what's left. Full scan runs daily.
+We collect the most recent 1,000 trades from each of ~8,700 active events, filter out bots (>100 trades/day), and analyze what's left. Full scan runs daily.
 
 > This is a snapshot of observed activity, not a complete census. We show the full picture — including the long tail of small traders that most analytics miss.
 

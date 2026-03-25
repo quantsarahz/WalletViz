@@ -98,7 +98,7 @@ export default function Home() {
             </p>
             <p>
               <strong className="text-gray-300">Bot filtering:</strong>{" "}
-              {o.botWallets.toLocaleString()} bots excluded (avg &gt;50 trades/day).
+              {o.botWallets.toLocaleString()} bots excluded (avg &gt;100 trades/day).
               Remaining: <strong className="text-gray-300">{o.humanWallets.toLocaleString()}</strong> human wallets.
             </p>
             <p>

@@ -19,7 +19,7 @@ const DB_PATH = path.join(
 // Inline the queries to avoid Next.js module resolution issues
 import Database from "better-sqlite3";
 
-const BOT_DAILY_TRADE_THRESHOLD = 50;
+const BOT_DAILY_TRADE_THRESHOLD = 100;
 
 function run() {
   const db = new Database(DB_PATH);

@@ -1,11 +1,11 @@
 import { getDb } from "./db";
 
 /**
- * Bot threshold: wallets averaging > 50 trades/day are classified as bots.
+ * Bot threshold: wallets averaging > 100 trades/day are classified as bots.
  * This affects ~0.3% of wallets (P99.5+) and removes automated market makers,
  * arbitrage bots, and other non-human actors.
  */
-const BOT_DAILY_TRADE_THRESHOLD = 50;
+const BOT_DAILY_TRADE_THRESHOLD = 100;
 
 // --- Bot wallet list (cached per process) ---
 

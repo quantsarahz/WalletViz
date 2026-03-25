@@ -61,6 +61,6 @@ No API key required. Public endpoints.
 
 **Activity-weighted:** Wallets with higher trading frequency appear more prominently. Volume figures are observed within the sample, not lifetime totals. Treat as lower-bound estimates.
 
-**Bot filtering:** Wallets averaging >50 trades/day are excluded (~0.3%). This catches most automated traders but may miss sophisticated bots or falsely flag very active humans.
+**Bot filtering:** Wallets averaging >100 trades/day are excluded. This catches most automated traders but may miss sophisticated bots or falsely flag very active humans.
 
 **Gini coefficient:** Calculated on observed volume distribution. The extreme value (0.91) reflects both genuine market inequality and sampling bias toward active traders.
