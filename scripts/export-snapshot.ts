@@ -109,9 +109,10 @@ function run() {
     { label: "51–200", from: 51, to: 201, color: "#f97316" },
     { label: "> 200", from: 201, to: Infinity, color: "#ef4444" },
   ];
+  const freqTotal = walletTrades.length;
   const frequencyDistribution = freqDefs.map((d) => {
     const count = walletTrades.filter((w) => w.cnt >= d.from && w.cnt < d.to).length;
-    return { label: d.label, count, pct: total > 0 ? count / total : 0, color: d.color };
+    return { label: d.label, count, pct: freqTotal > 0 ? count / freqTotal : 0, color: d.color };
   });
 
   // Market breadth
@@ -125,9 +126,10 @@ function run() {
     { label: "11–20", from: 11, to: 21, color: "#f59e0b" },
     { label: "> 20", from: 21, to: Infinity, color: "#ef4444" },
   ];
+  const breadthTotal = walletMarkets.length;
   const marketBreadth = breadthDefs.map((d) => {
     const count = walletMarkets.filter((w) => w.cnt >= d.from && w.cnt < d.to).length;
-    return { label: d.label, count, pct: total > 0 ? count / total : 0, color: d.color };
+    return { label: d.label, count, pct: breadthTotal > 0 ? count / breadthTotal : 0, color: d.color };
   });
 
   // Buy/Sell
