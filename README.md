@@ -1,45 +1,36 @@
 # WalletViz
 
-**See who's actually trading on Polymarket.**
+**Quantitative analysis of Polymarket wallet behavior — updated daily.**
 
-**[Live Dashboard](https://quantsarahz.github.io/WalletViz/)**
+**[Live Dashboard](https://quantsarahz.github.io/WalletViz/)** · **[Technical Docs](docs/TECHNICAL.md)**
 
-WalletViz scans every active market on Polymarket and maps out the wallet landscape — how many traders there are, how big they are, and how they behave.
+---
 
-## Key Findings
+WalletViz collects trade data from every active Polymarket event, filters out bots, and visualizes how wallets actually behave — their size, frequency, concentration, and inequality. All numbers on the dashboard refresh daily.
 
-- **205K+ human wallets** observed (bots filtered)
-- **71% are small traders** (under $100 in observed volume)
-- **Less than 1% are whales** (over $10K)
-- **Gini coefficient of 0.91** — extreme volume concentration, comparable to global wealth inequality
-- Most wallets trade in only one market — event-driven, not habitual
+## What the Dashboard Shows
 
-## What You'll See
-
-- **Wallet size distribution** — micro, small, medium, large, whale
-- **Trade frequency** — how often people trade
-- **Market participation** — how many markets each wallet touches
-- **Buy vs sell behavior** — who's buying, who's selling
-- **Volume concentration** — how much the top traders dominate
+- **Volume distribution** — micro, small, medium, large, whale breakdown
+- **Concentration** — how much the top 1%, 5%, 10% dominate
 - **Lorenz curve & Gini coefficient** — quantitative inequality measures
+- **Trade frequency & market breadth** — how active and diversified wallets are
+- **Buy vs sell behavior** — net buyer vs net seller classification
 
-## How It Works
+## Methodology
 
-We collect the most recent 1,000 trades from each of ~8,700 active events, filter out bots (>100 trades/day), and analyze what's left. Full scan runs daily.
+We collect the most recent 1,000 trades from each active event via Polymarket's public API, filter out bot wallets (>100 trades/day), and analyze the rest. Full scan runs daily.
 
-> This is a snapshot of observed activity, not a complete census. We show the full picture — including the long tail of small traders that most analytics miss.
+This is activity-weighted — wallets that trade more are more likely to appear in the sample. It is a snapshot of observed activity, not a complete census.
 
-## For Developers
+## Quick Start
 
 ```bash
 npm install
-npm run collect:full    # First-time data collection (~15 min)
-npm run export-snapshot # Export data for static site
-npm run dev             # Start the dashboard
+npm run collect:full    # Data collection (~15 min)
+npm run export-snapshot # Export to static JSON
+npm run dev             # Start dashboard
 ```
-
-See the full [technical documentation](docs/TECHNICAL.md) for architecture details.
 
 ## License
 
-MIT — free to use, fork, and build upon.
+MIT
