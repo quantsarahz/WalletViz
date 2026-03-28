@@ -2,17 +2,19 @@
 
 ## Architecture
 
-- **Next.js 14** (App Router, TypeScript) — web dashboard
+- **Next.js 14** (App Router, TypeScript) — web dashboard, static export
 - **SQLite** (better-sqlite3) — persistent trade storage
 - **Tailwind CSS** — styling
-- **Recharts** — data visualization (bar charts, Lorenz curve)
+- **Recharts** — Lorenz curve, concentration chart, bar charts
+- **Canvas API** — bubble map (wallet size), waffle chart (trade frequency)
+- **Puppeteer** — social media card generation
 - **Polymarket Data API + Gamma API** — trade and event data
 
 ## Data Collection
 
 ### How it works
 
-1. Fetch all active events from Gamma API (~8,700 events)
+1. Fetch all active events from Gamma API
 2. For each event, collect the most recent 1,000 trades via Data API
 3. Store in SQLite with deduplication (INSERT OR IGNORE)
 4. Purge trades older than 35 days
@@ -30,23 +32,28 @@ npm run export-snapshot # Export static JSON for deployment
 
 ### Scheduling
 
-Daily full scan + purge at 3:07am:
+Fully automated daily pipeline via `scripts/cron-update.sh`:
 
 ```
-7 3 * * * /path/to/node npx tsx /path/to/scripts/collect.ts full && npx tsx /path/to/scripts/collect.ts purge
+2 2 * * * /path/to/WalletViz/scripts/cron-update.sh
 ```
 
-Full daily scans ensure consistent coverage across days, enabling reliable day-over-day comparison as data accumulates.
+The script runs `collect:full` → `collect:purge` → `export-snapshot` → `git commit` → `git push`. GitHub Actions auto-deploys on push.
 
-### Deployment
+macOS `pmset` wakes the machine at 2:00am to ensure the cron job executes.
 
-Static export to GitHub Pages:
+### Social Media Cards
+
+Generate shareable images from HTML templates:
 
 ```bash
-npm run export-snapshot   # Generate public/data/snapshot.json
-git add -A && git commit -m "data: update" && git push
-# GitHub Actions auto-deploys to Pages
+node scripts/screenshot-card.mjs lorenz-card.html        # Lorenz curve
+node scripts/screenshot-card.mjs frequency-card.html      # Trade frequency
+node scripts/screenshot-card.mjs snapshot-card.html       # Wallet snapshot
+node scripts/screenshot-card.mjs methodology-card.html    # Methodology
 ```
+
+Requires Google Chrome installed. Templates are in `scripts/`.
 
 ## Data Source
 
@@ -63,4 +70,4 @@ No API key required. Public endpoints.
 
 **Bot filtering:** Wallets averaging >100 trades/day are excluded. This catches most automated traders but may miss sophisticated bots or falsely flag very active humans.
 
-**Gini coefficient:** Calculated on observed volume distribution. The extreme value (0.91) reflects both genuine market inequality and sampling bias toward active traders.
+**Gini coefficient:** Calculated on observed volume distribution. The extreme value reflects both genuine market inequality and sampling bias toward active traders.
