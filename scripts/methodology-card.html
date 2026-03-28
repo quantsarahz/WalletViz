@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1200px; height: 675px;
+    background: #0f1117;
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: #e2e8f0;
+    display: flex;
+    padding: 0;
+    overflow: hidden;
+  }
+  .left {
+    width: 400px;
+    padding: 48px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    background: linear-gradient(170deg, #151822 0%, #0f1117 100%);
+    border-right: 1px solid #1e2433;
+  }
+  .tag {
+    display: inline-block;
+    background: rgba(99,102,241,0.15);
+    color: #818cf8;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+    width: fit-content;
+  }
+  .headline {
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1.12;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+  }
+  .headline .accent { color: #818cf8; }
+  .desc {
+    font-size: 15px;
+    color: #94a3b8;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .desc strong { color: #cbd5e1; font-weight: 600; }
+  .divider {
+    width: 40px; height: 3px;
+    background: linear-gradient(90deg, #6366f1, #818cf8);
+    border-radius: 2px;
+    margin: 12px 0 16px;
+  }
+  .left-footer {
+    margin-top: auto;
+    padding-top: 20px;
+  }
+  .wallets-info {
+    font-size: 13px;
+    color: #64748b;
+  }
+  .timestamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 8px 14px;
+    background: rgba(99,102,241,0.10);
+    border: 1px solid rgba(99,102,241,0.20);
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #cbd5e1;
+  }
+  .timestamp .dot {
+    width: 8px; height: 8px;
+    background: #34d399;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(52,211,153,0.5);
+  }
+
+  /* Right panel */
+  .right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 40px 44px;
+    justify-content: center;
+    gap: 0;
+  }
+
+  /* Pipeline */
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .step-icon {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+    font-weight: 700;
+  }
+  .step-body {
+    flex: 1;
+  }
+  .step-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin-bottom: 2px;
+  }
+  .step-detail {
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.4;
+  }
+  .step-detail strong {
+    color: #cbd5e1;
+    font-weight: 600;
+  }
+  .arrow {
+    display: flex;
+    align-items: center;
+    padding-left: 18px;
+    color: #475569;
+    font-size: 18px;
+  }
+
+  /* Why box */
+  .why-box {
+    margin-top: 24px;
+    padding: 16px 20px;
+    background: rgba(245,158,11,0.06);
+    border: 1px solid rgba(245,158,11,0.15);
+    border-radius: 10px;
+  }
+  .why-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #f59e0b;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .why-items {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .why-item {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 14px;
+    color: #cbd5e1;
+    line-height: 1.4;
+  }
+  .why-item .bullet {
+    color: #f59e0b;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: auto;
+    font-size: 12px;
+    color: #475569;
+  }
+</style>
+</head>
+<body>
+  <div class="left">
+    <div class="tag">Methodology</div>
+    <div class="headline">
+      How we<br>
+      <span class="accent">sample</span> the<br>
+      market
+    </div>
+    <div class="divider"></div>
+    <div class="desc">
+      Activity-weighted sampling from <strong>every active event</strong> on Polymarket via their public API.
+    </div>
+    <div class="desc">
+      No API key required.<br>
+      <strong>Fully open-source & reproducible.</strong>
+    </div>
+    <div class="left-footer">
+      <div class="wallets-info">Data refreshes daily · bots filtered</div>
+      <div class="timestamp"><div class="dot"></div>March 26, 2026</div>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="pipeline">
+      <div class="step">
+        <div class="step-icon" style="background:rgba(99,102,241,0.12);color:#818cf8;">1</div>
+        <div class="step-body">
+          <div class="step-title">Fetch all active events</div>
+          <div class="step-detail"><strong>8,700+</strong> events scanned daily via Gamma API</div>
+        </div>
+      </div>
+      <div class="arrow">↓</div>
+      <div class="step">
+        <div class="step-icon" style="background:rgba(129,140,248,0.12);color:#a5b4fc;">2</div>
+        <div class="step-body">
+          <div class="step-title">Collect latest trades per event</div>
+          <div class="step-detail">Up to <strong>1,000 trades</strong> per event from Data API</div>
+        </div>
+      </div>
+      <div class="arrow">↓</div>
+      <div class="step">
+        <div class="step-icon" style="background:rgba(167,139,250,0.12);color:#c4b5fd;">3</div>
+        <div class="step-body">
+          <div class="step-title">Filter bots & deduplicate</div>
+          <div class="step-detail">Wallets averaging <strong>&gt;100 trades/day</strong> excluded</div>
+        </div>
+      </div>
+      <div class="arrow">↓</div>
+      <div class="step">
+        <div class="step-icon" style="background:rgba(245,158,11,0.12);color:#fbbf24;">4</div>
+        <div class="step-body">
+          <div class="step-title">Analyze & visualize</div>
+          <div class="step-detail">Distribution, concentration, Gini, Lorenz curve</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="why-box">
+      <div class="why-title">Why activity-weighted?</div>
+      <div class="why-items">
+        <div class="why-item"><span class="bullet">→</span>Captures who actually moves the market, not just who signed up</div>
+        <div class="why-item"><span class="bullet">→</span>Influence proportional to real trading activity</div>
+        <div class="why-item"><span class="bullet">→</span>Reveals market power structure, not just user counts</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span><span style="color:#cbd5e1;font-weight:700">Wallet</span><span style="color:#818cf8;font-weight:700">Viz</span> · quantsarahz.github.io/WalletViz</span>
+      <span>Source: Polymarket public API</span>
+    </div>
+  </div>
+</body>
+</html>

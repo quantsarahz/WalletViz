@@ -5,6 +5,8 @@ import StatsCard from "@/components/StatsCard";
 import DistributionChart from "@/components/DistributionChart";
 import ConcentrationChart from "@/components/ConcentrationChart";
 import LorenzChart from "@/components/LorenzChart";
+import WalletBubbleMap from "@/components/WalletBubbleMap";
+import WaffleChart from "@/components/WaffleChart";
 
 interface SizeBucket {
   label: string;
@@ -92,8 +94,7 @@ export default function Home() {
             <p>
               <strong className="text-gray-300">What this is:</strong> Snapshot
               of Polymarket wallet activity — latest 1,000 trades from each of{" "}
-              <strong className="text-gray-300">{o.eventsScanned.toLocaleString()}</strong> events
-              ({o.totalTrades.toLocaleString()} trades, {o.totalObservedWallets.toLocaleString()} wallets).
+              <strong className="text-gray-300">{o.eventsScanned.toLocaleString()}</strong> events.
               Activity-weighted: high-frequency wallets appear more prominently.
             </p>
             <p>
@@ -167,26 +168,19 @@ export default function Home() {
                   Wallet Size (by Observed Volume)
                 </h3>
                 <p className="text-xs text-gray-600 mb-4">
+                  Each bubble represents wallets — size and color indicate volume tier.
                   Only {data.sizeDistribution.find(s => s.label.includes("Whale"))?.pct
                     ? (data.sizeDistribution.find(s => s.label.includes("Whale"))!.pct * 100).toFixed(1)
-                    : "0.9"}% of wallets in observed activity fall into the whale category.
+                    : "0.9"}% are whales.
                 </p>
-                <DistributionChart
-                  data={data.sizeDistribution.map((s) => ({ range: s.label, count: s.count }))}
-                  color="#6366f1"
-                  label="Wallets"
-                />
+                <WalletBubbleMap data={data.sizeDistribution} />
               </div>
-              <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6">
+              <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6 flex flex-col">
                 <h3 className="text-sm text-gray-400 mb-1">Trade Frequency</h3>
                 <p className="text-xs text-gray-600 mb-4">
                   Observed trades per wallet in this snapshot.
                 </p>
-                <DistributionChart
-                  data={data.frequencyDistribution.map((s) => ({ range: s.label, count: s.count }))}
-                  color="#f59e0b"
-                  label="Wallets"
-                />
+                <WaffleChart data={data.frequencyDistribution} />
               </div>
             </div>
 

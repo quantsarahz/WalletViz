@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1200px; height: 675px;
+    background: #0f1117;
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: #e2e8f0;
+    display: flex;
+    padding: 0;
+    overflow: hidden;
+  }
+  .left {
+    width: 400px;
+    padding: 48px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    background: linear-gradient(170deg, #151822 0%, #0f1117 100%);
+    border-right: 1px solid #1e2433;
+  }
+  .tag {
+    display: inline-block;
+    background: rgba(245,158,11,0.12);
+    color: #f59e0b;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+    width: fit-content;
+  }
+  .headline {
+    font-size: 40px;
+    font-weight: 800;
+    line-height: 1.12;
+    letter-spacing: -1px;
+    margin-bottom: 20px;
+  }
+  .headline .accent { color: #f59e0b; }
+  .divider {
+    width: 40px; height: 3px;
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    border-radius: 2px;
+    margin: 12px 0 16px;
+  }
+  .desc {
+    font-size: 15px;
+    color: #94a3b8;
+    line-height: 1.6;
+  }
+  .desc strong { color: #cbd5e1; font-weight: 600; }
+  .left-footer {
+    margin-top: auto;
+    padding-top: 20px;
+  }
+  .wallets-info {
+    font-size: 13px;
+    color: #64748b;
+  }
+  .timestamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 8px 14px;
+    background: rgba(99,102,241,0.10);
+    border: 1px solid rgba(99,102,241,0.20);
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #cbd5e1;
+  }
+  .timestamp .dot {
+    width: 8px; height: 8px;
+    background: #34d399;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(52,211,153,0.5);
+  }
+  .right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 40px 48px;
+    justify-content: center;
+  }
+  .chart-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #94a3b8;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  canvas { display: block; }
+  .legend {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    gap: 12px 32px;
+    margin-top: 24px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .legend-note {
+    grid-column: 1 / -1;
+    font-size: 12px;
+    color: #475569;
+    margin-top: 4px;
+  }
+  .legend-swatch {
+    width: 14px; height: 14px;
+    border-radius: 3px;
+  }
+  .legend-label { color: #cbd5e1; font-weight: 500; }
+  .legend-pct { color: #64748b; font-weight: 500; }
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 16px;
+    font-size: 12px;
+    color: #475569;
+  }
+</style>
+</head>
+<body>
+  <div class="left">
+    <div class="tag">Trade Frequency</div>
+    <div class="headline">
+      <span class="accent">79%</span> of<br>
+      wallets trade<br>
+      5 times or less
+    </div>
+    <div class="divider"></div>
+    <div class="desc">
+      Each square = <strong>1%</strong> of observed wallets, colored by how often they trade.
+    </div>
+    <div class="left-footer">
+      <div class="wallets-info">245,629 human wallets observed</div>
+      <div class="timestamp"><div class="dot"></div>March 28, 2026</div>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="chart-title">1 square = 1% of wallets</div>
+    <canvas id="c"></canvas>
+    <div class="legend" id="legend"></div>
+    <div class="footer">
+      <span><span style="color:#cbd5e1;font-weight:700">Wallet</span><span style="color:#818cf8;font-weight:700">Viz</span> · quantsarahz.github.io/WalletViz</span>
+      <span>Source: Polymarket public API</span>
+    </div>
+  </div>
+
+<script>
+// Real data from snapshot
+const freq = [
+  { label: '1 trade',  pct: 38.0, color: '#94a3b8' },
+  { label: '2–5',      pct: 40.8, color: '#a78bfa' },
+  { label: '6–20',     pct: 15.4, color: '#6366f1' },
+  { label: '21–50',    pct: 3.7,  color: '#f59e0b' },
+  { label: '51–200',   pct: 1.7,  color: '#f97316' },
+  { label: '> 200',    pct: 0.3,  color: '#ef4444' },
+];
+
+// Build legend
+const legendEl = document.getElementById('legend');
+freq.forEach(f => {
+  const item = document.createElement('div');
+  item.className = 'legend-item';
+  item.innerHTML = `<div class="legend-swatch" style="background:${f.color}"></div>
+    <span class="legend-label">${f.label}</span>
+    <span class="legend-pct">${f.pct}%</span>`;
+  legendEl.appendChild(item);
+});
+const note = document.createElement('div');
+note.className = 'legend-note';
+note.textContent = '1 square = 1% of wallets';
+legendEl.appendChild(note);
+
+// Waffle chart
+const canvas = document.getElementById('c');
+const cols = 20;
+const rows = 5;
+const cellSize = 32;
+const gap = 4;
+const dpr = 2;
+const W = cols * (cellSize + gap) - gap;
+const H = rows * (cellSize + gap) - gap;
+canvas.width = W * dpr;
+canvas.height = H * dpr;
+canvas.style.width = W + 'px';
+canvas.style.height = H + 'px';
+const ctx = canvas.getContext('2d');
+ctx.scale(dpr, dpr);
+
+// Assign colors to 100 cells
+const cells = [];
+let remaining = 100;
+for (const f of freq) {
+  const count = Math.round(f.pct);
+  for (let i = 0; i < count && cells.length < 100; i++) {
+    cells.push(f.color);
+  }
+}
+// Fill remaining if rounding issues
+while (cells.length < 100) cells.push(freq[0].color);
+
+// Draw
+for (let i = 0; i < 100; i++) {
+  const col = i % cols;
+  const row = Math.floor(i / cols);
+  const x = col * (cellSize + gap);
+  const y = row * (cellSize + gap);
+
+  ctx.fillStyle = cells[i];
+  ctx.globalAlpha = 0.85;
+  ctx.beginPath();
+  ctx.roundRect(x, y, cellSize, cellSize, 5);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1200px; height: 675px;
+    background: #08090c;
+    font-family: 'Inter', -apple-system, sans-serif;
+    overflow: hidden;
+  }
+  canvas { position: absolute; top: 0; left: 0; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+// Inline snapshot data (update via export-snapshot)
+const snapshot = {"overview":{"humanWallets":235914,"scannedAt":"2026-03-26T04:36:35.588Z"},"sizeDistribution":[{"label":"Micro (< $10)","count":72736,"pct":0.3083,"color":"#94a3b8"},{"label":"Small ($10–$100)","count":85157,"pct":0.3610,"color":"#a78bfa"},{"label":"Medium ($100–$1K)","count":52096,"pct":0.2208,"color":"#6366f1"},{"label":"Large ($1K–$10K)","count":23113,"pct":0.0980,"color":"#f59e0b"},{"label":"Whale (> $10K)","count":2812,"pct":0.0119,"color":"#ef4444"}]};
+
+(function render() {
+
+const canvas = document.getElementById('c');
+const dpr = 2;
+const W = 1200, H = 675;
+canvas.width = W * dpr;
+canvas.height = H * dpr;
+canvas.style.width = W + 'px';
+canvas.style.height = H + 'px';
+const ctx = canvas.getContext('2d');
+ctx.scale(dpr, dpr);
+
+// --- Seeded random for reproducibility ---
+let seed = 42;
+function rand() { seed = (seed * 16807 + 0) % 2147483647; return (seed - 1) / 2147483646; }
+
+// --- Read real data from snapshot ---
+const sizeDist = snapshot.sizeDistribution;
+const overview = snapshot.overview;
+const humanWallets = overview.humanWallets.toLocaleString();
+const scanDate = new Date(overview.scannedAt);
+const dateStr = scanDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+// Map snapshot categories to visual properties
+// Radius represents typical volume midpoint for each tier (log scale)
+const catConfig = [
+  { color: '#94a3b8', midVol: 5,     minR: 1.5, maxR: 3 },    // Micro < $10
+  { color: '#a78bfa', midVol: 50,    minR: 2,   maxR: 5 },    // Small $10-$100
+  { color: '#6366f1', midVol: 500,   minR: 4,   maxR: 9 },    // Medium $100-$1K
+  { color: '#f59e0b', midVol: 5000,  minR: 8,   maxR: 16 },   // Large $1K-$10K
+  { color: '#ef4444', midVol: 50000, minR: 14,  maxR: 28 },   // Whale > $10K
+];
+
+// --- Background: scattered faint dots = the unseen full market ---
+for (let i = 0; i < 2000; i++) {
+  const x = rand() * W;
+  const y = rand() * H;
+  const r = rand() * 1.5 + 0.3;
+  const alpha = rand() * 0.12 + 0.03;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(148,163,184,${alpha})`;
+  ctx.fill();
+}
+
+// --- Polaroid frame ---
+const polaroidW = 480;
+const polaroidH = 540;
+const polaroidX = 360;
+const polaroidY = 60;
+const photoInset = 28;
+const photoW = polaroidW - photoInset * 2;
+const photoH = polaroidH - photoInset - 100;
+
+// Shadow
+ctx.shadowColor = 'rgba(0,0,0,0.5)';
+ctx.shadowBlur = 40;
+ctx.shadowOffsetX = 8;
+ctx.shadowOffsetY = 12;
+
+// Slight rotation
+ctx.save();
+ctx.translate(polaroidX + polaroidW / 2, polaroidY + polaroidH / 2);
+ctx.rotate(-0.03);
+ctx.translate(-(polaroidX + polaroidW / 2), -(polaroidY + polaroidH / 2));
+
+// White polaroid border
+ctx.fillStyle = '#f0ede8';
+ctx.beginPath();
+ctx.roundRect(polaroidX, polaroidY, polaroidW, polaroidH, 4);
+ctx.fill();
+ctx.shadowBlur = 0;
+ctx.shadowOffsetX = 0;
+ctx.shadowOffsetY = 0;
+
+// Photo area (dark)
+const photoX = polaroidX + photoInset;
+const photoY = polaroidY + photoInset;
+ctx.fillStyle = '#0a0b10';
+ctx.fillRect(photoX, photoY, photoW, photoH);
+
+// --- Inside the photo: data-driven wallet visualization ---
+ctx.save();
+ctx.beginPath();
+ctx.rect(photoX, photoY, photoW, photoH);
+ctx.clip();
+
+// Total bubbles budget — scale so visual is dense but readable
+const totalBubbles = 500;
+const bubbles = [];
+
+for (let ci = 0; ci < sizeDist.length; ci++) {
+  const cat = sizeDist[ci];
+  const cfg = catConfig[ci];
+  // Number of bubbles proportional to real wallet count percentage
+  const count = Math.max(1, Math.round(totalBubbles * cat.pct));
+  for (let i = 0; i < count; i++) {
+    const r = rand() * (cfg.maxR - cfg.minR) + cfg.minR;
+    bubbles.push({
+      x: photoX + rand() * photoW,
+      y: photoY + rand() * photoH,
+      r,
+      color: cfg.color,
+      alpha: rand() * 0.4 + 0.5,
+    });
+  }
+}
+
+// Sort so big ones render first (behind)
+bubbles.sort((a, b) => b.r - a.r);
+
+for (const b of bubbles) {
+  // Glow
+  ctx.shadowColor = b.color;
+  ctx.shadowBlur = b.r > 12 ? 15 : b.r > 6 ? 8 : 3;
+  ctx.beginPath();
+  ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+  ctx.fillStyle = b.color + Math.round(b.alpha * 255).toString(16).padStart(2, '0');
+  ctx.fill();
+}
+ctx.shadowBlur = 0;
+
+// Subtle vignette inside photo
+const vignette = ctx.createRadialGradient(
+  photoX + photoW / 2, photoY + photoH / 2, photoW * 0.25,
+  photoX + photoW / 2, photoY + photoH / 2, photoW * 0.65
+);
+vignette.addColorStop(0, 'rgba(10,11,16,0)');
+vignette.addColorStop(1, 'rgba(10,11,16,0.5)');
+ctx.fillStyle = vignette;
+ctx.fillRect(photoX, photoY, photoW, photoH);
+
+// Small "viewfinder" corners in photo
+ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+ctx.lineWidth = 1.5;
+const cornerLen = 20;
+const cm = 8; // corner margin
+// top-left
+ctx.beginPath(); ctx.moveTo(photoX+cm, photoY+cm+cornerLen); ctx.lineTo(photoX+cm, photoY+cm); ctx.lineTo(photoX+cm+cornerLen, photoY+cm); ctx.stroke();
+// top-right
+ctx.beginPath(); ctx.moveTo(photoX+photoW-cm-cornerLen, photoY+cm); ctx.lineTo(photoX+photoW-cm, photoY+cm); ctx.lineTo(photoX+photoW-cm, photoY+cm+cornerLen); ctx.stroke();
+// bottom-left
+ctx.beginPath(); ctx.moveTo(photoX+cm, photoY+photoH-cm-cornerLen); ctx.lineTo(photoX+cm, photoY+photoH-cm); ctx.lineTo(photoX+cm+cornerLen, photoY+photoH-cm); ctx.stroke();
+// bottom-right
+ctx.beginPath(); ctx.moveTo(photoX+photoW-cm-cornerLen, photoY+photoH-cm); ctx.lineTo(photoX+photoW-cm, photoY+photoH-cm); ctx.lineTo(photoX+photoW-cm, photoY+photoH-cm-cornerLen); ctx.stroke();
+
+ctx.restore();
+
+// --- Polaroid caption area (data-driven) ---
+const captionY = photoY + photoH + 16;
+ctx.fillStyle = '#1a1915';
+ctx.font = '600 17px Inter, sans-serif';
+ctx.textAlign = 'center';
+ctx.fillText('Polymarket Active Wallet Snapshot', polaroidX + polaroidW / 2, captionY + 18);
+
+ctx.fillStyle = '#7a7568';
+ctx.font = '500 13px Inter, sans-serif';
+ctx.fillText(`${dateStr} · ${humanWallets} wallets observed`, polaroidX + polaroidW / 2, captionY + 42);
+
+// end polaroid rotation
+ctx.restore();
+
+// --- Left side text ---
+ctx.fillStyle = '#e2e8f0';
+ctx.font = '800 42px Inter, sans-serif';
+ctx.textAlign = 'left';
+ctx.fillText('A snapshot', 48, 180);
+ctx.fillText('of who', 48, 230);
+ctx.fillStyle = '#f59e0b';
+ctx.fillText('actually', 48, 280);
+ctx.fillStyle = '#e2e8f0';
+ctx.fillText('trades.', 48, 330);
+
+// Subtitle
+ctx.fillStyle = '#64748b';
+ctx.font = '500 14px Inter, sans-serif';
+ctx.fillText('Not a census. Not a user count.', 48, 370);
+ctx.fillText('A picture of real market activity.', 48, 390);
+
+// --- Right side: legend ---
+const legendX = 880;
+const legendY = 140;
+ctx.fillStyle = '#475569';
+ctx.font = '600 11px Inter, sans-serif';
+ctx.textAlign = 'left';
+ctx.fillText('WALLET SIZE', legendX, legendY);
+
+const legendLabels = ['Micro < $10', 'Small $10–$100', 'Medium $100–$1K', 'Large $1K–$10K', 'Whale > $10K'];
+
+sizeDist.forEach((cat, i) => {
+  const cfg = catConfig[i];
+  const ly = legendY + 24 + i * 36;
+  ctx.beginPath();
+  ctx.arc(legendX + 8, ly, Math.min(cfg.maxR, 8), 0, Math.PI * 2);
+  ctx.fillStyle = cfg.color;
+  ctx.fill();
+  ctx.fillStyle = '#cbd5e1';
+  ctx.font = '600 13px Inter, sans-serif';
+  ctx.fillText(legendLabels[i], legendX + 24, ly + 1);
+  ctx.fillStyle = '#64748b';
+  ctx.font = '500 12px Inter, sans-serif';
+  ctx.fillText(`${(cat.pct * 100).toFixed(1)}% · ${cat.count.toLocaleString()}`, legendX + 24, ly + 16);
+});
+
+// --- Bottom: branding ---
+ctx.fillStyle = '#475569';
+ctx.font = '500 12px Inter, sans-serif';
+ctx.textAlign = 'left';
+ctx.fillText('Source: Polymarket public API · Activity-weighted sampling', 48, H - 30);
+
+// WalletViz branded
+ctx.font = '700 12px Inter, sans-serif';
+ctx.textAlign = 'left';
+const vizW = ctx.measureText('Viz').width;
+const walletW = ctx.measureText('Wallet').width;
+const brandX = W - 48 - walletW - vizW;
+ctx.fillStyle = '#cbd5e1';
+ctx.fillText('Wallet', brandX, H - 30);
+ctx.fillStyle = '#818cf8';
+ctx.fillText('Viz', brandX + walletW, H - 30);
+
+// Faint scan line effect over entire image
+for (let y = 0; y < H; y += 3) {
+  ctx.fillStyle = 'rgba(0,0,0,0.04)';
+  ctx.fillRect(0, y, W, 1);
+}
+
+})(); // end render
+</script>
+</body>
+</html>
