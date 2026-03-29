@@ -39,14 +39,22 @@ export default function WaffleChart({ data }: Props) {
     ctx.scale(dpr, dpr);
 
     // Assign colors to 100 cells based on real percentages
+    // Use largest remainder method to ensure exactly 100 cells
+    const raw = data.map((b) => b.pct * 100);
+    const floored = raw.map(Math.floor);
+    let total = floored.reduce((a, b) => a + b, 0);
+    const remainders = raw.map((v, i) => ({ i, r: v - floored[i] }));
+    remainders.sort((a, b) => b.r - a.r);
+    for (let j = 0; total < 100; j++) {
+      floored[remainders[j].i]++;
+      total++;
+    }
     const cells: string[] = [];
-    for (const bucket of data) {
-      const count = Math.round(bucket.pct * 100);
-      for (let i = 0; i < count && cells.length < 100; i++) {
-        cells.push(bucket.color);
+    for (let i = 0; i < data.length; i++) {
+      for (let j = 0; j < floored[i]; j++) {
+        cells.push(data[i].color);
       }
     }
-    while (cells.length < 100) cells.push(data[0].color);
 
     // Draw
     for (let i = 0; i < 100; i++) {
