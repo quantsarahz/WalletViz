@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1200px; height: 675px;
+    background: #0f1117;
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: #e2e8f0;
+    display: flex;
+    padding: 0;
+    overflow: hidden;
+  }
+  .left {
+    width: 400px;
+    padding: 48px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    background: linear-gradient(170deg, #151822 0%, #0f1117 100%);
+    border-right: 1px solid #1e2433;
+  }
+  .tag {
+    display: inline-block;
+    background: rgba(139,92,246,0.15);
+    color: #a78bfa;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+    width: fit-content;
+  }
+  .headline {
+    font-size: 40px;
+    font-weight: 800;
+    line-height: 1.12;
+    letter-spacing: -1px;
+    margin-bottom: 20px;
+  }
+  .headline .accent { color: #a78bfa; }
+  .divider {
+    width: 40px; height: 3px;
+    background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+    border-radius: 2px;
+    margin: 12px 0 16px;
+  }
+  .desc {
+    font-size: 15px;
+    color: #94a3b8;
+    line-height: 1.6;
+  }
+  .desc strong { color: #cbd5e1; font-weight: 600; }
+  .left-footer {
+    margin-top: auto;
+    padding-top: 20px;
+  }
+  .wallets-info {
+    font-size: 13px;
+    color: #64748b;
+  }
+  .timestamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 8px 14px;
+    background: rgba(99,102,241,0.10);
+    border: 1px solid rgba(99,102,241,0.20);
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #cbd5e1;
+  }
+  .timestamp .dot {
+    width: 8px; height: 8px;
+    background: #34d399;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(52,211,153,0.5);
+  }
+  .right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 40px;
+    position: relative;
+  }
+  canvas { display: block; }
+  .footer {
+    position: absolute;
+    bottom: 20px;
+    left: 40px;
+    right: 40px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #475569;
+  }
+</style>
+</head>
+<body>
+  <div class="left">
+    <div class="tag">Market Participation</div>
+    <div class="headline">
+      <span class="accent">43%</span> of<br>
+      wallets trade<br>
+      in just 1<br>
+      market
+    </div>
+    <div class="divider"></div>
+    <div class="desc">
+      Most users enter Polymarket for a <strong>single event</strong> and never come back. Only <strong>3.4%</strong> participate in more than 20 markets.
+    </div>
+    <div class="left-footer">
+      <div class="wallets-info">262,578 human wallets observed</div>
+      <div class="timestamp"><div class="dot"></div>March 29, 2026</div>
+    </div>
+  </div>
+
+  <div class="right">
+    <canvas id="c"></canvas>
+    <div class="footer">
+      <span><span style="color:#cbd5e1;font-weight:700">Wallet</span><span style="color:#818cf8;font-weight:700">Viz</span> · quantsarahz.github.io/WalletViz</span>
+      <span>Source: Polymarket public API</span>
+    </div>
+  </div>
+
+<script>
+const data = [
+  { label: '1 market',  pct: 0.4265, color: '#94a3b8' },
+  { label: '2–3',       pct: 0.2881, color: '#a78bfa' },
+  { label: '4–10',      pct: 0.2026, color: '#6366f1' },
+  { label: '11–20',     pct: 0.0489, color: '#f59e0b' },
+  { label: '> 20',      pct: 0.0339, color: '#ef4444' },
+];
+
+const canvas = document.getElementById('c');
+const size = 500;
+const dpr = 2;
+canvas.width = size * dpr;
+canvas.height = size * dpr;
+canvas.style.width = size + 'px';
+canvas.style.height = size + 'px';
+const ctx = canvas.getContext('2d');
+ctx.scale(dpr, dpr);
+
+const cx = size / 2 - 60;
+const cy = size / 2;
+const maxR = 180;
+const minR = 28;
+
+// Rings from inside out: first data item = center, last = outermost
+// Calculate radii: each ring area proportional to pct
+// Area of ring = pi * (r_outer^2 - r_inner^2)
+// Total area = pi * maxR^2 - pi * minR^2
+const totalArea = maxR * maxR - minR * minR;
+
+const rings = [];
+let rInner = minR;
+for (let i = 0; i < data.length; i++) {
+  const ringArea = totalArea * data[i].pct;
+  const rOuter = Math.sqrt(rInner * rInner + ringArea);
+  rings.push({ rInner, rOuter, ...data[i] });
+  rInner = rOuter;
+}
+
+// Draw rings from outside in (so outer rings don't cover inner)
+for (let i = rings.length - 1; i >= 0; i--) {
+  const ring = rings[i];
+
+  // Ring glow
+  ctx.shadowColor = ring.color;
+  ctx.shadowBlur = 20;
+
+  // Draw ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, ring.rOuter, 0, Math.PI * 2);
+  ctx.arc(cx, cy, ring.rInner, 0, Math.PI * 2, true);
+  ctx.closePath();
+
+  // Gradient for depth
+  const grad = ctx.createRadialGradient(cx, cy, ring.rInner, cx, cy, ring.rOuter);
+  grad.addColorStop(0, ring.color + 'cc');
+  grad.addColorStop(1, ring.color + '88');
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+
+  // Subtle ring border
+  ctx.beginPath();
+  ctx.arc(cx, cy, ring.rOuter, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+// Labels on each ring
+ctx.textAlign = 'center';
+for (let i = 0; i < rings.length; i++) {
+  const ring = rings[i];
+  const labelR = (ring.rInner + ring.rOuter) / 2;
+  const thickness = ring.rOuter - ring.rInner;
+
+  if (thickness > 25) {
+    // Label inside ring
+    ctx.fillStyle = '#fff';
+    ctx.font = `700 ${thickness > 50 ? 16 : 13}px Inter, sans-serif`;
+    ctx.fillText(ring.label, cx, cy - labelR - 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.font = `600 ${thickness > 50 ? 14 : 12}px Inter, sans-serif`;
+    ctx.fillText(`${(ring.pct * 100).toFixed(1)}%`, cx, cy - labelR + 15);
+  } else {
+    // Callout line to the right for thin rings
+    const calloutIndex = i - rings.filter(r => (r.rOuter - r.rInner) > 30).length;
+    const angle = -Math.PI * 0.15 + calloutIndex * 0.35;
+    const midR = (ring.rInner + ring.rOuter) / 2;
+    const startX = cx + Math.cos(angle) * midR;
+    const startY = cy + Math.sin(angle) * midR;
+    const elbowX = cx + Math.cos(angle) * (maxR + 30);
+    const elbowY = cy + Math.sin(angle) * (maxR + 30);
+    const endX = cx + maxR + 60;
+    const endY = elbowY;
+
+    // Line with elbow
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(elbowX, elbowY);
+    ctx.lineTo(endX, endY);
+    ctx.strokeStyle = ring.color + '99';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Dot at start
+    ctx.beginPath();
+    ctx.arc(startX, startY, 3, 0, Math.PI * 2);
+    ctx.fillStyle = ring.color;
+    ctx.fill();
+
+    // Label and percentage on two lines
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '600 13px Inter, sans-serif';
+    ctx.fillText(ring.label, endX + 8, endY - 1);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '500 12px Inter, sans-serif';
+    ctx.fillText(`${(ring.pct * 100).toFixed(1)}%`, endX + 8, endY + 14);
+    ctx.textAlign = 'center';
+  }
+}
+
+// Center highlight dot
+ctx.beginPath();
+ctx.arc(cx, cy, minR - 2, 0, Math.PI * 2);
+const centerGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, minR);
+centerGrad.addColorStop(0, 'rgba(255,255,255,0.12)');
+centerGrad.addColorStop(1, 'rgba(255,255,255,0.02)');
+ctx.fillStyle = centerGrad;
+ctx.fill();
+
+// Radiating lines from center (subtle, like a target)
+ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+ctx.lineWidth = 1;
+for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
+  ctx.beginPath();
+  ctx.moveTo(cx + Math.cos(angle) * minR, cy + Math.sin(angle) * minR);
+  ctx.lineTo(cx + Math.cos(angle) * maxR, cy + Math.sin(angle) * maxR);
+  ctx.stroke();
+}
+</script>
+</body>
+</html>

@@ -7,6 +7,7 @@ import ConcentrationChart from "@/components/ConcentrationChart";
 import LorenzChart from "@/components/LorenzChart";
 import WalletBubbleMap from "@/components/WalletBubbleMap";
 import WaffleChart from "@/components/WaffleChart";
+import BullseyeChart from "@/components/BullseyeChart";
 
 interface SizeBucket {
   label: string;
@@ -189,13 +190,9 @@ export default function Home() {
               <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6">
                 <h3 className="text-sm text-gray-400 mb-1">Market Participation</h3>
                 <p className="text-xs text-gray-600 mb-4">
-                  Distinct markets per wallet, based on observed activity.
+                  Distinct markets per wallet. Center = 1 market, outer rings = broader participation.
                 </p>
-                <DistributionChart
-                  data={data.marketBreadth.map((s) => ({ range: s.label, count: s.count }))}
-                  color="#8b5cf6"
-                  label="Wallets"
-                />
+                <BullseyeChart data={data.marketBreadth} />
               </div>
               <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6">
                 <h3 className="text-sm text-gray-400 mb-1">Buy vs Sell Behavior</h3>
