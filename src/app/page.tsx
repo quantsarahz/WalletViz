@@ -74,10 +74,14 @@ export default function Home() {
         <p className="mt-2 text-lg text-gray-400">
           Polymarket Active Wallet Snapshot
         </p>
-        <p className="mt-2 text-xs text-gray-500">
-          Daily activity-weighted snapshot of wallet behavior across all active Polymarket events. Not a census — an observation.
-          {o && <> · Last scan: {new Date(o.scannedAt).toLocaleString()}</>}
+        <p className="mt-2 text-sm text-gray-500">
+          Latest 1,000 trades sampled from every active event via Polymarket public API. Activity-weighted — bots filtered.
         </p>
+        {o && (
+          <p className="mt-1.5 text-xs text-gray-600">
+            Last scan: {new Date(o.scannedAt).toLocaleString()} · {o.eventsScanned.toLocaleString()} events
+          </p>
+        )}
         {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
       </header>
 
