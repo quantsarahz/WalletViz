@@ -54,7 +54,8 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("data/snapshot.json")
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+    fetch(`${basePath}/data/snapshot.json`)
       .then((r) => r.json())
       .then(setData)
       .catch(() => setError("Failed to load data."))
