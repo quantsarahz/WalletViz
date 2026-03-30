@@ -8,6 +8,7 @@ import LorenzChart from "@/components/LorenzChart";
 import WalletBubbleMap from "@/components/WalletBubbleMap";
 import WaffleChart from "@/components/WaffleChart";
 import BullseyeChart from "@/components/BullseyeChart";
+import SpectrumBar from "@/components/SpectrumBar";
 
 interface SizeBucket {
   label: string;
@@ -199,14 +200,11 @@ export default function Home() {
                 <p className="text-xs text-gray-600 mb-4">
                   By observed buy/sell ratio (1.5x threshold).
                 </p>
-                <DistributionChart
-                  data={[
-                    { range: "Buy-dominant", count: data.buySell.buyDominant },
-                    { range: "Balanced", count: data.buySell.balanced },
-                    { range: "Sell-dominant", count: data.buySell.sellDominant },
-                  ]}
-                  color="#10b981"
-                  label="Wallets"
+                <SpectrumBar
+                  buyDominant={data.buySell.buyDominant}
+                  balanced={data.buySell.balanced}
+                  sellDominant={data.buySell.sellDominant}
+                  total={data.buySell.total}
                 />
               </div>
             </div>

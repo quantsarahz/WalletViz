@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1200px; height: 675px;
+    background: #0f1117;
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: #e2e8f0;
+    display: flex;
+    padding: 0;
+    overflow: hidden;
+  }
+  .left {
+    width: 400px;
+    padding: 48px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    background: linear-gradient(170deg, #151822 0%, #0f1117 100%);
+    border-right: 1px solid #1e2433;
+  }
+  .tag {
+    display: inline-block;
+    background: rgba(16,185,129,0.12);
+    color: #34d399;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+    width: fit-content;
+  }
+  .headline {
+    font-size: 40px;
+    font-weight: 800;
+    line-height: 1.12;
+    letter-spacing: -1px;
+    margin-bottom: 20px;
+  }
+  .headline .accent { color: #34d399; }
+  .headline .accent-red { color: #f87171; }
+  .divider {
+    width: 40px; height: 3px;
+    background: linear-gradient(90deg, #34d399, #94a3b8, #f87171);
+    border-radius: 2px;
+    margin: 12px 0 16px;
+  }
+  .desc {
+    font-size: 15px;
+    color: #94a3b8;
+    line-height: 1.6;
+  }
+  .desc strong { color: #cbd5e1; font-weight: 600; }
+  .left-footer {
+    margin-top: auto;
+    padding-top: 20px;
+  }
+  .wallets-info {
+    font-size: 13px;
+    color: #64748b;
+  }
+  .timestamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 8px 14px;
+    background: rgba(99,102,241,0.10);
+    border: 1px solid rgba(99,102,241,0.20);
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #cbd5e1;
+  }
+  .timestamp .dot {
+    width: 8px; height: 8px;
+    background: #34d399;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(52,211,153,0.5);
+  }
+  .right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 40px 48px;
+    justify-content: center;
+  }
+  canvas { display: block; }
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 16px;
+    font-size: 12px;
+    color: #475569;
+  }
+</style>
+</head>
+<body>
+  <div class="left">
+    <div class="tag">Buy vs Sell</div>
+    <div class="headline">
+      <span class="accent">67.5%</span> of<br>
+      wallets lean<br>
+      <span class="accent">buy</span>
+    </div>
+    <div class="divider"></div>
+    <div class="desc">
+      Wallets classified by their observed buy/sell ratio (<strong>1.5x threshold</strong>). The market is overwhelmingly buy-dominant.
+    </div>
+    <div class="left-footer">
+      <div class="wallets-info">282,248 human wallets observed</div>
+      <div class="timestamp"><div class="dot"></div>March 30, 2026</div>
+    </div>
+  </div>
+
+  <div class="right">
+    <canvas id="c"></canvas>
+    <div class="footer">
+      <span><span style="color:#cbd5e1;font-weight:700">Wallet</span><span style="color:#818cf8;font-weight:700">Viz</span> · quantsarahz.github.io/WalletViz</span>
+      <span>Source: Polymarket public API</span>
+    </div>
+  </div>
+
+<script>
+const data = [
+  { label: 'Buy-dominant', pct: 0.675, color: '#34d399', icon: '↑' },
+  { label: 'Balanced',     pct: 0.177, color: '#94a3b8', icon: '↔' },
+  { label: 'Sell-dominant', pct: 0.148, color: '#f87171', icon: '↓' },
+];
+
+const canvas = document.getElementById('c');
+const dpr = 2;
+const W = 700;
+const H = 420;
+canvas.width = W * dpr;
+canvas.height = H * dpr;
+canvas.style.width = W + 'px';
+canvas.style.height = H + 'px';
+const ctx = canvas.getContext('2d');
+ctx.scale(dpr, dpr);
+
+const barY = 160;
+const barH = 56;
+const barX = 20;
+const barW = W - 40;
+const radius = 12;
+
+// Draw spectrum bar with rounded ends
+let x = barX;
+for (let i = 0; i < data.length; i++) {
+  const segW = barW * data[i].pct;
+
+  // Gradient for each segment
+  const grad = ctx.createLinearGradient(x, barY, x + segW, barY);
+  grad.addColorStop(0, data[i].color + 'cc');
+  grad.addColorStop(1, data[i].color + '99');
+  ctx.fillStyle = grad;
+
+  if (i === 0) {
+    // First segment — rounded left
+    ctx.beginPath();
+    ctx.roundRect(x, barY, segW + 2, barH, [radius, 0, 0, radius]);
+    ctx.fill();
+  } else if (i === data.length - 1) {
+    // Last segment — rounded right
+    ctx.beginPath();
+    ctx.roundRect(x - 2, barY, segW + 2, barH, [0, radius, radius, 0]);
+    ctx.fill();
+  } else {
+    ctx.fillRect(x, barY, segW, barH);
+  }
+
+  // Percentage inside bar
+  ctx.fillStyle = '#fff';
+  ctx.font = '800 20px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(`${(data[i].pct * 100).toFixed(1)}%`, x + segW / 2, barY + barH / 2 + 7);
+
+  x += segW;
+}
+
+// Labels above bar
+x = barX;
+for (let i = 0; i < data.length; i++) {
+  const segW = barW * data[i].pct;
+  const centerX = x + segW / 2;
+
+  ctx.fillStyle = data[i].color;
+  ctx.font = '700 15px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(data[i].label, centerX, barY - 16);
+
+  x += segW;
+}
+
+// Arrow indicators below bar
+ctx.font = '500 13px Inter, sans-serif';
+ctx.fillStyle = '#34d399';
+ctx.textAlign = 'left';
+ctx.fillText('← More buying', barX, barY + barH + 30);
+
+ctx.fillStyle = '#f87171';
+ctx.textAlign = 'right';
+ctx.fillText('More selling →', barX + barW, barY + barH + 30);
+
+// Insight cards below
+const cardY = barY + barH + 60;
+const cardW = (barW - 20) / 3;
+
+const insights = [
+  { title: 'Buy-dominant', desc: '190,528 wallets', sub: 'Buy volume ≥ 1.5× sell', color: '#34d399' },
+  { title: 'Balanced', desc: '50,074 wallets', sub: 'Within 1.5× ratio', color: '#94a3b8' },
+  { title: 'Sell-dominant', desc: '41,646 wallets', sub: 'Sell volume ≥ 1.5× buy', color: '#f87171' },
+];
+
+insights.forEach((ins, i) => {
+  const cx = barX + i * (cardW + 10);
+
+  // Card background
+  ctx.fillStyle = 'rgba(255,255,255,0.03)';
+  ctx.beginPath();
+  ctx.roundRect(cx, cardY, cardW, 100, 8);
+  ctx.fill();
+  ctx.strokeStyle = ins.color + '30';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Color accent line at top
+  ctx.fillStyle = ins.color;
+  ctx.beginPath();
+  ctx.roundRect(cx, cardY, cardW, 3, [8, 8, 0, 0]);
+  ctx.fill();
+
+  // Title
+  ctx.fillStyle = ins.color;
+  ctx.font = '700 14px Inter, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(ins.title, cx + 14, cardY + 28);
+
+  // Wallet count
+  ctx.fillStyle = '#cbd5e1';
+  ctx.font = '600 13px Inter, sans-serif';
+  ctx.fillText(ins.desc, cx + 14, cardY + 50);
+
+  // Sub description
+  ctx.fillStyle = '#64748b';
+  ctx.font = '500 11px Inter, sans-serif';
+  ctx.fillText(ins.sub, cx + 14, cardY + 72);
+});
+</script>
+</body>
+</html>
