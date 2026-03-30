@@ -101,11 +101,6 @@ export default function Home() {
               Activity-weighted: high-frequency wallets appear more prominently.
             </p>
             <p>
-              <strong className="text-gray-300">Bot filtering:</strong>{" "}
-              {o.botWallets.toLocaleString()} bots excluded (avg &gt;100 trades/day).
-              Remaining: <strong className="text-gray-300">{o.humanWallets.toLocaleString()}</strong> human wallets.
-            </p>
-            <p>
               <strong className="text-gray-300">What this is not:</strong> Not a
               complete census or equal-weight sample. High-frequency traders and
               active markets are overrepresented.
@@ -131,7 +126,7 @@ export default function Home() {
               <StatsCard
                 label="Bot Wallets"
                 value={o.botWallets.toLocaleString()}
-                description={`${((o.botWallets / o.totalObservedWallets) * 100).toFixed(1)}% of total observed`}
+                description={`Avg >100 trades/day · ${((o.botWallets / o.totalObservedWallets) * 100).toFixed(1)}% of total`}
                 color="#ef4444"
               />
               <StatsCard
