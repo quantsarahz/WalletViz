@@ -92,9 +92,26 @@ export default function SpectrumBar({ buyDominant, balanced, sellDominant, total
     ctx.fillText("More selling →", barX + barW, barY + barH + 18);
   }, [buyDominant, balanced, sellDominant, total]);
 
+  const cards = [
+    { label: "Buy-dominant", count: buyDominant, desc: "Buy volume ≥ 1.5× sell", color: "#34d399", border: "border-emerald-500/20" },
+    { label: "Balanced", count: balanced, desc: "Within 1.5× ratio", color: "#94a3b8", border: "border-gray-500/20" },
+    { label: "Sell-dominant", count: sellDominant, desc: "Sell volume ≥ 1.5× buy", color: "#f87171", border: "border-red-500/20" },
+  ];
+
   return (
-    <div className="w-full rounded-lg overflow-hidden">
-      <canvas ref={canvasRef} />
+    <div className="w-full">
+      <div className="rounded-lg overflow-hidden">
+        <canvas ref={canvasRef} />
+      </div>
+      <div className="grid grid-cols-3 gap-3 mt-4">
+        {cards.map((c) => (
+          <div key={c.label} className={`rounded-lg bg-white/[0.02] border ${c.border} p-3`}>
+            <div className="text-xs font-semibold" style={{ color: c.color }}>{c.label}</div>
+            <div className="text-sm font-semibold text-gray-200 mt-1">{c.count.toLocaleString()}</div>
+            <div className="text-[11px] text-gray-500 mt-0.5">{c.desc}</div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
