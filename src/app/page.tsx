@@ -126,7 +126,7 @@ export default function Home() {
               <StatsCard
                 label="Bot Wallets"
                 value={o.botWallets.toLocaleString()}
-                description={`Avg >100 trades/day · ${((o.botWallets / o.totalObservedWallets) * 100).toFixed(1)}% of total`}
+                description="Avg >100 trades/day"
                 color="#ef4444"
               />
               <StatsCard
