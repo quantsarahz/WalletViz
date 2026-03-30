@@ -74,11 +74,10 @@ export default function Home() {
         <p className="mt-2 text-lg text-gray-400">
           Polymarket Active Wallet Snapshot
         </p>
-        {o && (
-          <p className="mt-2 text-xs text-gray-500">
-            Last scan: {new Date(o.scannedAt).toLocaleString()}
-          </p>
-        )}
+        <p className="mt-2 text-xs text-gray-500">
+          Daily activity-weighted snapshot of wallet behavior across all active Polymarket events. Not a census — an observation.
+          {o && <> · Last scan: {new Date(o.scannedAt).toLocaleString()}</>}
+        </p>
         {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
       </header>
 
@@ -92,27 +91,6 @@ export default function Home() {
 
       {data && o && (
         <>
-          {/* ===== Methodology ===== */}
-          <section className="mb-10 rounded-lg border border-gray-700/50 bg-gray-800/30 px-5 py-4 text-xs text-gray-400 leading-relaxed space-y-2">
-            <p>
-              <strong className="text-gray-300">What this is:</strong> Snapshot
-              of Polymarket wallet activity — latest 1,000 trades from each of{" "}
-              <strong className="text-gray-300">{o.eventsScanned.toLocaleString()}</strong> events.
-              Activity-weighted: high-frequency wallets appear more prominently.
-            </p>
-            <p>
-              <strong className="text-gray-300">What this is not:</strong> Not a
-              complete census or equal-weight sample. High-frequency traders and
-              active markets are overrepresented.
-            </p>
-            <p>
-              <strong className="text-gray-300">Sampling bias:</strong> Volume
-              figures are <em>observed within this sample</em>, not lifetime
-              totals. High-volume events cover hours; low-volume events span
-              weeks. Treat all volume metrics as lower-bound estimates.
-            </p>
-          </section>
-
           {/* ===== Snapshot Overview ===== */}
           <section className="mb-12">
             <h2 className="text-2xl font-semibold mb-6">Snapshot Overview</h2>
