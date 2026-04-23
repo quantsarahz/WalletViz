@@ -1,45 +1,45 @@
 {
   "overview": {
-    "scannedAt": "2026-04-22T02:39:11.867Z",
-    "totalObservedWallets": 486870,
-    "botWallets": 1322,
-    "humanWallets": 485548,
-    "totalTrades": 14795998,
-    "humanTrades": 9811835,
-    "medianVolume": 73.29509818495703,
-    "avgVolume": 1842.188926490198,
+    "scannedAt": "2026-04-23T01:20:40.165Z",
+    "totalObservedWallets": 493198,
+    "botWallets": 1372,
+    "humanWallets": 491826,
+    "totalTrades": 15347136,
+    "humanTrades": 10136172,
+    "medianVolume": 74.17079624,
+    "avgVolume": 1866.4919539761354,
     "medianTrades": 4,
-    "eventsScanned": 34685
+    "eventsScanned": 36098
   },
   "sizeDistribution": [
     {
       "label": "Micro (< $10)",
-      "count": 105097,
-      "pct": 0.21645027886017448,
+      "count": 105965,
+      "pct": 0.2154522127744365,
       "color": "#94a3b8"
     },
     {
       "label": "Small ($10–$100)",
-      "count": 160627,
-      "pct": 0.3308159028561543,
+      "count": 162438,
+      "pct": 0.3302753412792329,
       "color": "#a78bfa"
     },
     {
       "label": "Medium ($100–$1K)",
-      "count": 138551,
-      "pct": 0.2853497491494147,
+      "count": 141291,
+      "pct": 0.2872784277366386,
       "color": "#6366f1"
     },
     {
       "label": "Large ($1K–$10K)",
-      "count": 69163,
-      "pct": 0.14244317760550965,
+      "count": 69776,
+      "pct": 0.14187131221204247,
       "color": "#f59e0b"
     },
     {
       "label": "Whale (> $10K)",
-      "count": 12110,
-      "pct": 0.0249408915287469,
+      "count": 12356,
+      "pct": 0.025122705997649576,
       "color": "#ef4444"
     }
   ],
@@ -47,197 +47,197 @@
     {
       "label": "Top 1%",
       "walletPct": 0.01,
-      "volPct": 0.5586009481271836,
+      "volPct": 0.5626323907088636,
       "color": "#ef4444"
     },
     {
       "label": "Top 5%",
       "walletPct": 0.05,
-      "volPct": 0.7749676417804717,
+      "volPct": 0.7780746412266183,
       "color": "#f59e0b"
     },
     {
       "label": "Top 10%",
       "walletPct": 0.1,
-      "volPct": 0.8798535134346149,
+      "volPct": 0.8816583668055793,
       "color": "#6366f1"
     },
     {
       "label": "Top 25%",
       "walletPct": 0.25,
-      "volPct": 0.9678222941276653,
+      "volPct": 0.9678872133761095,
       "color": "#8b5cf6"
     },
     {
       "label": "Top 50%",
       "walletPct": 0.5,
-      "volPct": 0.9945907852242112,
+      "volPct": 0.994615320061145,
       "color": "#a78bfa"
     }
   ],
   "frequencyDistribution": [
     {
       "label": "1 trade",
-      "count": 125330,
-      "pct": 0.25812072132930214,
+      "count": 126590,
+      "pct": 0.2573877753514454,
       "color": "#94a3b8"
     },
     {
       "label": "2–5",
-      "count": 165317,
-      "pct": 0.3404750920609291,
+      "count": 166450,
+      "pct": 0.33843269774269763,
       "color": "#a78bfa"
     },
     {
       "label": "6–20",
-      "count": 117257,
-      "pct": 0.2414941468196759,
+      "count": 118766,
+      "pct": 0.24147971030405063,
       "color": "#6366f1"
     },
     {
       "label": "21–50",
-      "count": 43400,
-      "pct": 0.08938354189493108,
+      "count": 44656,
+      "pct": 0.09079633854249267,
       "color": "#f59e0b"
     },
     {
       "label": "51–200",
-      "count": 26201,
-      "pct": 0.053961709243988236,
+      "count": 26925,
+      "pct": 0.054744970782349855,
       "color": "#f97316"
     },
     {
       "label": "> 200",
-      "count": 8043,
-      "pct": 0.01656478865117352,
+      "count": 8439,
+      "pct": 0.017158507276963806,
       "color": "#ef4444"
     }
   ],
   "marketBreadth": [
     {
       "label": "1 market",
-      "count": 148168,
-      "pct": 0.30515623584074075,
+      "count": 149537,
+      "pct": 0.3040445198098515,
       "color": "#94a3b8"
     },
     {
       "label": "2–3",
-      "count": 118871,
-      "pct": 0.2448182260044321,
+      "count": 119347,
+      "pct": 0.24266102239409873,
       "color": "#a78bfa"
     },
     {
       "label": "4–10",
-      "count": 116267,
-      "pct": 0.23945521349073623,
+      "count": 118022,
+      "pct": 0.2399669801921818,
       "color": "#6366f1"
     },
     {
       "label": "11–20",
-      "count": 49461,
-      "pct": 0.10186634483099508,
+      "count": 50133,
+      "pct": 0.10193239072354857,
       "color": "#f59e0b"
     },
     {
       "label": "> 20",
-      "count": 52781,
-      "pct": 0.1087039798330958,
+      "count": 54787,
+      "pct": 0.11139508688031946,
       "color": "#ef4444"
     }
   ],
   "buySell": {
-    "buyDominant": 344012,
-    "sellDominant": 56657,
-    "balanced": 84879,
-    "total": 485548
+    "buyDominant": 349249,
+    "sellDominant": 56703,
+    "balanced": 85874,
+    "total": 491826
   },
   "gini": {
-    "giniVolume": 0.9195147146800546,
-    "giniTrades": 0.8024294159949702,
+    "giniVolume": 0.920318904380764,
+    "giniTrades": 0.8036243173540417,
     "lorenz": [
       {
         "cumWalletPct": 0,
         "cumVolPct": 0
       },
       {
-        "cumWalletPct": 0.04999917618855396,
-        "cumVolPct": 0.00003288479347483573
+        "cumWalletPct": 0.0499993900281807,
+        "cumVolPct": 0.00003247176599401355
       },
       {
-        "cumWalletPct": 0.09999835237710793,
-        "cumVolPct": 0.00010896867145982831
+        "cumWalletPct": 0.0999987800563614,
+        "cumVolPct": 0.0001078390708216815
       },
       {
-        "cumWalletPct": 0.1499975285656619,
-        "cumVolPct": 0.0002412332443832052
+        "cumWalletPct": 0.14999817008454208,
+        "cumVolPct": 0.00023911822738494653
       },
       {
-        "cumWalletPct": 0.19999670475421585,
-        "cumVolPct": 0.0004479433243690601
+        "cumWalletPct": 0.1999975601127228,
+        "cumVolPct": 0.00044481734504724356
       },
       {
-        "cumWalletPct": 0.2499958809427698,
-        "cumVolPct": 0.0007406498807697589
+        "cumWalletPct": 0.24999695014090348,
+        "cumVolPct": 0.0007355603253331655
       },
       {
-        "cumWalletPct": 0.2999950571313238,
-        "cumVolPct": 0.0011537784050525688
+        "cumWalletPct": 0.29999634016908416,
+        "cumVolPct": 0.001147024639080637
       },
       {
-        "cumWalletPct": 0.3499942333198777,
-        "cumVolPct": 0.0017323264813796956
+        "cumWalletPct": 0.3499957301972649,
+        "cumVolPct": 0.0017222918127153277
       },
       {
-        "cumWalletPct": 0.3999934095084317,
-        "cumVolPct": 0.002557590722689449
+        "cumWalletPct": 0.3999951202254456,
+        "cumVolPct": 0.0025437236534069886
       },
       {
-        "cumWalletPct": 0.4499925856969857,
-        "cumVolPct": 0.003742094082004008
+        "cumWalletPct": 0.4499945102536263,
+        "cumVolPct": 0.003722332437603637
       },
       {
-        "cumWalletPct": 0.4999917618855396,
-        "cumVolPct": 0.005408887016535011
+        "cumWalletPct": 0.49999390028180696,
+        "cumVolPct": 0.005384437555283093
       },
       {
-        "cumWalletPct": 0.5499909380740936,
-        "cumVolPct": 0.007802414364740386
+        "cumWalletPct": 0.5499932903099877,
+        "cumVolPct": 0.007770170823081475
       },
       {
-        "cumWalletPct": 0.5999901142626476,
-        "cumVolPct": 0.011053356560644878
+        "cumWalletPct": 0.5999926803381683,
+        "cumVolPct": 0.01101076433717355
       },
       {
-        "cumWalletPct": 0.6499892904512016,
-        "cumVolPct": 0.015739606013805633
+        "cumWalletPct": 0.6499920703663491,
+        "cumVolPct": 0.015697776801725297
       },
       {
-        "cumWalletPct": 0.6999884666397554,
-        "cumVolPct": 0.022421940458160355
+        "cumWalletPct": 0.6999914603945298,
+        "cumVolPct": 0.022375864366996675
       },
       {
-        "cumWalletPct": 0.7499876428283094,
-        "cumVolPct": 0.0321747442471194
+        "cumWalletPct": 0.7499908504227105,
+        "cumVolPct": 0.03211084854226037
       },
       {
-        "cumWalletPct": 0.7999868190168634,
-        "cumVolPct": 0.04731216070817684
+        "cumWalletPct": 0.7999902404508912,
+        "cumVolPct": 0.04708288058842005
       },
       {
-        "cumWalletPct": 0.8499859952054174,
-        "cumVolPct": 0.07258376619872306
+        "cumWalletPct": 0.8499896304790718,
+        "cumVolPct": 0.07192652241034042
       },
       {
-        "cumWalletPct": 0.8999851713939714,
-        "cumVolPct": 0.12012704448061402
+        "cumWalletPct": 0.8999890205072526,
+        "cumVolPct": 0.11832822629140274
       },
       {
-        "cumWalletPct": 0.9499843475825253,
-        "cumVolPct": 0.22498773762542895
+        "cumWalletPct": 0.9499884105354333,
+        "cumVolPct": 0.22189419236387625
       },
       {
-        "cumWalletPct": 0.9999835237710792,
-        "cumVolPct": 0.9665671378297764
+        "cumWalletPct": 0.9999878005636139,
+        "cumVolPct": 0.9729209830556578
       },
       {
         "cumWalletPct": 1,
